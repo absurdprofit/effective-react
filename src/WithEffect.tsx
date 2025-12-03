@@ -1,9 +1,10 @@
 import { Effect } from "effect";
-import { use, useEffect, type JSX } from "react";
+import { Suspense, use, useEffect, type JSX, type ReactNode } from "react";
 
 interface State {
 	promise?: Promise<JSX.Element>;
 	controller: AbortController;
+	fallback?: ReactNode;
 }
 
 export function WithEffect<P extends object>(
@@ -12,9 +13,14 @@ export function WithEffect<P extends object>(
 	const state: State = {
 		controller: new AbortController(),
 	};
-	return function Component(props: P) {
+	const Inner = (props: P) => {
 		const signal = state.controller.signal;
-		state.promise ??= Effect.runPromise(lambda(props), { signal });
+		state.promise ??= Effect
+			.runPromise(lambda(props), { signal })
+			.then(jsx => {
+				state.fallback = jsx;
+				return jsx;
+			});
 		const jsx = use(state.promise);
 		const deps = Object.values(props);
 
@@ -27,5 +33,13 @@ export function WithEffect<P extends object>(
 		}, deps);
 
 		return jsx;
+	}
+	return function Component(props: P & { fallback?: ReactNode }) {
+		const fallback = state.fallback ?? props.fallback;
+		return (
+			<Suspense fallback={fallback}>
+				<Inner {...props} />
+			</Suspense>
+		);
 	}
 }

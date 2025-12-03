@@ -18,9 +18,10 @@ function App() {
 
   return (
     <div>
-      <Suspense fallback={<div style={fallbackStyle}>Loading...</div>}>
-        <EffectiveComponent index={count} />
-      </Suspense>
+      <EffectiveComponent
+        index={count}
+        fallback={<div style={fallbackStyle}>Loading...</div>}
+      />
       <button onClick={() => setCount(count + 1)}>Next</button>
       <p>Total renders so far in App: {++GLOBAL.renders}</p>
     </div>
