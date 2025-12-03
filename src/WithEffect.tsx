@@ -23,7 +23,7 @@ export function WithEffect<P extends object>(
 				state.promise = undefined;
 				state.controller.abort();
 				state.controller = new AbortController();
-			}
+			};
 		}, deps);
 
 		return jsx;
