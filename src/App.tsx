@@ -6,13 +6,20 @@ const GLOBAL = {
   renders: Number(),
 };
 
+const fallbackStyle = {
+  width: '595px',
+  height: '516px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <div>
-      <Suspense>
-        <EffectiveComponent count={count} />
+      <Suspense fallback={<div style={fallbackStyle}>Loading...</div>}>
+        <EffectiveComponent index={count} />
       </Suspense>
       <button onClick={() => setCount(count + 1)}>Next</button>
       <p>Total renders so far in App: {++GLOBAL.renders}</p>

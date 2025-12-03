@@ -10,4 +10,13 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      '/api/dog': {
+        target: 'https://http.dog',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/dog/, '')
+      }
+    }
+  }
 })
