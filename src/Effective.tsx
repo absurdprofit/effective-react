@@ -20,8 +20,10 @@ export const EffectiveComponent = WithEffect((props: Props) => (
 				const url = URL.createObjectURL(blob);
 				return { url };
 			},
-			catch: (): never => ({ url: 'Failed to fetch dog image' }) as never,
-		});
+			catch: (error) => error
+		}).pipe(
+			Effect.catchAll(() => Effect.succeed({ url: '/api/dog/404.jpg' }))
+		);
 
 		return (
 			<div>
