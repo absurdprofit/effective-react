@@ -16,6 +16,8 @@ export const EffectiveComponent = WithEffect((props: Props) => (
 		const dog = yield* Effect.tryPromise({
 			try: async (signal) => {
 				const response = await fetch(`/api/dog/${statusCode}.jpg`, { signal });
+				if (!response.ok)
+					throw new Error('Unknown');
 				const blob = await response.blob();
 				const url = URL.createObjectURL(blob);
 				return { url };
