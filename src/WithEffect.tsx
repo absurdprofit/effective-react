@@ -3,7 +3,7 @@ import { Suspense, use, useEffect, type JSX, type ReactNode } from "react";
 
 interface State {
 	promise?: Promise<JSX.Element>;
-	controller: AbortController;
+	controller?: AbortController;
 	fallback?: ReactNode;
 }
 
@@ -14,6 +14,7 @@ export function WithEffect<P extends object>(
 		controller: new AbortController(),
 	};
 	const Inner = (props: P) => {
+		state.controller ??= new AbortController();
 		const signal = state.controller.signal;
 		state.promise ??= Effect
 			.runPromise(lambda(props), { signal })
@@ -27,8 +28,8 @@ export function WithEffect<P extends object>(
 		useEffect(() => {
 			return () => {
 				state.promise = undefined;
-				state.controller.abort();
-				state.controller = new AbortController();
+				state.controller?.abort();
+				state.controller = undefined;
 			};
 		}, deps);
 
