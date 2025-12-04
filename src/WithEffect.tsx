@@ -10,9 +10,7 @@ interface State {
 export function WithEffect<P extends object>(
 	lambda: (props: P) => Effect.Effect<JSX.Element, never, never>
 ) {
-	const state: State = {
-		controller: new AbortController(),
-	};
+	const state: State = {};
 	const Inner = (props: P) => {
 		state.controller ??= new AbortController();
 		const signal = state.controller.signal;
