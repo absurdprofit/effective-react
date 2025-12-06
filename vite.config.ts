@@ -18,6 +18,5 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/dog/, '')
       }
     },
-    port: 80,
   }
 })
