@@ -26,6 +26,7 @@ function App() {
         <button onClick={() => setCount(count - 1)}>Previous</button>
         <button onClick={() => setCount(count + 1)}>Next</button>
       </div>
+      <p>Index in App: {count}</p>
       <p>Total renders so far in App: {++GLOBAL.renders}</p>
     </div>
   );

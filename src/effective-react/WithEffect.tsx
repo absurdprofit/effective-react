@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { Suspense, use, useEffect, useRef, type JSX, type ReactNode, type RefObject } from "react";
+import { Suspense, use, useDeferredValue, useRef, type JSX, type ReactNode, type RefObject } from "react";
+import { diff } from "./common/utils";
 
 interface State {
 	promise?: Promise<JSX.Element>;
@@ -20,21 +21,17 @@ export function WithEffect<P extends object>(
 				return jsx;
 			});
 		const jsx = use(state.current.promise);
-		const deps = Object.values(props);
-
-		useEffect(() => {
-			const current = state.current;
-			return () => {
-				current.promise = undefined;
-				current.controller?.abort();
-				current.controller = undefined;
-			};
-		}, deps);
 
 		return jsx;
 	}
 	return function Component(props: P & { fallback?: ReactNode }) {
 		const state = useRef<State>({});
+		const prevProps = useDeferredValue(props);
+		if (diff(Object.values(prevProps), Object.values(props))) {
+			state.current.promise = undefined;
+			state.current.controller?.abort();
+			state.current.controller = undefined;
+		}
 		const fallback = state.current.fallback ?? props.fallback;
 		return (
 			<Suspense fallback={fallback}>
