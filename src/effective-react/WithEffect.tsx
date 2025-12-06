@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { Suspense, use, useEffect, type JSX, type ReactNode } from "react";
+import { Suspense, use, useEffect, useRef, type JSX, type ReactNode, type RefObject } from "react";
 
 interface State {
 	promise?: Promise<JSX.Element>;
@@ -10,34 +10,35 @@ interface State {
 export function WithEffect<P extends object>(
 	lambda: (props: P) => Effect.Effect<JSX.Element, never, never>
 ) {
-	const state: State = {};
-	const Inner = (props: P) => {
-		state.controller ??= new AbortController();
-		const signal = state.controller.signal;
-		state.promise ??= Effect
+	const Inner = ({ props, state }: { props: P, state: RefObject<State> }) => {
+		state.current.controller ??= new AbortController();
+		const signal = state.current.controller.signal;
+		state.current.promise ??= Effect
 			.runPromise(lambda(props), { signal })
 			.then(jsx => {
-				state.fallback = jsx;
+				state.current.fallback = jsx;
 				return jsx;
 			});
-		const jsx = use(state.promise);
+		const jsx = use(state.current.promise);
 		const deps = Object.values(props);
 
 		useEffect(() => {
+			const current = state.current;
 			return () => {
-				state.promise = undefined;
-				state.controller?.abort();
-				state.controller = undefined;
+				current.promise = undefined;
+				current.controller?.abort();
+				current.controller = undefined;
 			};
 		}, deps);
 
 		return jsx;
 	}
 	return function Component(props: P & { fallback?: ReactNode }) {
-		const fallback = state.fallback ?? props.fallback;
+		const state = useRef<State>({});
+		const fallback = state.current.fallback ?? props.fallback;
 		return (
 			<Suspense fallback={fallback}>
-				<Inner {...props} />
+				<Inner props={props} state={state} />
 			</Suspense>
 		);
 	}
