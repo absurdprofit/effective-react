@@ -1,7 +1,7 @@
-import { Console, Effect } from "effect";
+import { Console, Context, Effect } from "effect";
 import { WithEffect } from "./effective-react/WithEffect";
 import { ALL_STATUS_CODES } from "./constants";
-import { Callback } from "./effective-react/Callback";
+import { CallbackEffect } from "./effective-react/CallbackEffect";
 import type { MouseEvent } from "react";
 
 const GLOBAL = {
@@ -12,11 +12,17 @@ interface Props {
 	index: number;
 }
 
-export const EffectiveComponent = WithEffect((props: Props) => (
-	Effect.gen(function* () {
-		const onClick = yield* Callback((event: MouseEvent) => (
+class Random extends Context.Tag("MyRandomService")<
+  Random,
+  { readonly next: Effect.Effect<number> }
+>() {}
+
+export const EffectiveComponent = WithEffect((props: Props) => {
+	const effect = Effect.gen(function* () {
+		const onClick = yield* CallbackEffect((event: MouseEvent) => (
 			Effect.gen(function* () {
-				yield* Console.log('Button Click but in a generator', event);
+				const random = yield* Random;
+				yield* Console.log('Button Click but in a generator', event, yield* random.next);
 			})
 		));
 		const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);
@@ -46,5 +52,9 @@ export const EffectiveComponent = WithEffect((props: Props) => (
 				<img src={dog.url} alt="Random Dog" width={300} height={300} />
 			</div>
 		);
-	})
-));
+	});
+	
+	return Effect.provideService(effect, Random, {
+		next: Effect.sync(() => Math.random())
+	});
+});
