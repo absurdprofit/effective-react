@@ -8,7 +8,7 @@ class Random extends Context.Tag("MyRandomService")<
 >() {}
 
 const SIDES = 6;
-export const Die = WithEffect((_, StateRef) => {
+export const SixSidedDie = WithEffect((_, StateRef) => {
   const effect = Effect.gen(function* () {
     const random = yield* Random;
     const side = yield* StateRef.make('side', yield* random.next);
@@ -21,7 +21,7 @@ export const Die = WithEffect((_, StateRef) => {
     ));
     return (
       <div>
-        <p>Die</p>
+        <p>Six Sided Die</p>
         <button onClick={onClick}>Roll!</button>
 				<p>Side {yield* StateRef.get(side)}</p>
 				<p>Renders so far {yield* StateRef.get(renders)}</p>

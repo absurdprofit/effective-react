@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './App.css'
 import { Figure } from './Figure'
-import { Die } from './Die';
+import { SixSidedDie } from './SixSidedDie';
 
 const GLOBAL = {
   renders: Number(),
@@ -19,7 +19,7 @@ function App() {
 
   return (
     <div>
-      <Die />
+      <SixSidedDie />
       <Figure
         index={count}
         fallback={<div style={fallbackStyle}>Loading...</div>}
