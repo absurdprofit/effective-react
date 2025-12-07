@@ -1,4 +1,5 @@
 import { FiberId, Effect, Ref } from "effect";
+import { dual } from "effect/Function";
 
 const FIBER_BRAND = Symbol('effective/FiberId');
 
@@ -52,14 +53,23 @@ export class StateRef {
 
   public get = Ref.get;
 
-  public set = <A>(self: Ref.Ref<A>, value: A) => {
-    const getFiberId = this.#getFiberId;
-    const forceUpdate = this.#forceUpdate;
-    return Effect.gen(function* () {
-      yield* Ref.set(self, value);
-      const fiberId = yield* Effect.fiberId;
-      if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id)
-        yield* Effect.sync(forceUpdate);
-    });
-  };
+  public set = dual<
+    <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<void>,
+    <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<void>
+  >(
+    2,
+    <A>(self: Ref.Ref<A>, value: A) => {
+      const getFiberId = this.#getFiberId;
+      const forceUpdate = this.#forceUpdate;
+
+      return Effect.gen(function* () {
+        yield* Ref.set(self, value);
+
+        const fiberId = yield* Effect.fiberId;
+        if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id) {
+          yield* Effect.sync(forceUpdate);
+        }
+      });
+    }
+  );
 }
