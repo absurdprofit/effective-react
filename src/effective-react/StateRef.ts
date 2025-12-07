@@ -26,7 +26,6 @@ export class StateRef {
   #getFiberId(value: unknown) {
     if (typeof value === 'object' && value !== null)
       return (value as FiberStamped)[FIBER_BRAND];
-    return null;
   }
 
   #fiberBrandRef<A>(ref: Ref.Ref<A>, fiberId: FiberId.FiberId) {
