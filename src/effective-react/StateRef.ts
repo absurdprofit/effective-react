@@ -18,6 +18,7 @@ interface FiberStamped {
 
 export class StateRef {
   #forceUpdate;
+  #registry = new Map<string, Ref.Ref<unknown>>;
 
   constructor(forceUpdate: () => void) {
     this.#forceUpdate = forceUpdate;
@@ -33,12 +34,17 @@ export class StateRef {
       (ref as unknown as FiberStamped)[FIBER_BRAND] = fiberId.id;
   }
 
-  public make = <A>(value: A) => {
+  public make = <A>(key: string, value: A) => {
     const fiberBrandRef = this.#fiberBrandRef;
+    const registry = this.#registry;
     return Effect.gen(function* () {
+      let ref;
+      if (yield* Effect.sync(() => registry.has(key)))
+        ref = yield* Effect.sync(() => registry.get(key) as Ref.Ref<A>);
+      ref ??= yield* Ref.make(value);
       const fiberId = yield* Effect.fiberId;
-      const ref = yield* Ref.make(value);
       fiberBrandRef(ref, fiberId);
+      yield* Effect.sync(() => registry.set(key, ref as Ref.Ref<unknown>));
 
       return ref;
     });
@@ -53,7 +59,7 @@ export class StateRef {
       yield* Ref.set(self, value);
       const fiberId = yield* Effect.fiberId;
       if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id)
-        forceUpdate();
+        yield* Effect.sync(forceUpdate);
     });
   };
 }

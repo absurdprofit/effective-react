@@ -1,8 +1,7 @@
-import { Console, Context, Effect } from "effect";
+import { Context, Effect } from "effect";
 import { WithEffect } from "./effective-react/WithEffect";
 import { ALL_STATUS_CODES } from "./constants";
 import { CallbackEffect } from "./effective-react/CallbackEffect";
-import type { MouseEvent } from "react";
 
 const GLOBAL = {
 	renders: Number(),
@@ -19,15 +18,13 @@ class Random extends Context.Tag("MyRandomService")<
 
 export const EffectiveComponent = WithEffect((props: Props, StateRef) => {
 	const effect = Effect.gen(function* () {
-		const state = yield* StateRef.make(0);
-		const onClick = yield* CallbackEffect((event: MouseEvent) => (
+		const state = yield* StateRef.make('state', 0);
+		const onClick = yield* CallbackEffect(() => (
 			Effect.gen(function* () {
-				yield* StateRef.set(state, 1);
 				const random = yield* Random;
-				yield* Console.log('Button Click but in a generator', event, yield* random.next);
+				yield* StateRef.set(state, (yield* random.next) * ALL_STATUS_CODES.length);
 			})
 		));
-		yield* StateRef.set(state, 0);
 		const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);
 		const date = yield* Effect.sync(() => new Date());
 		const dog = yield* Effect.tryPromise({

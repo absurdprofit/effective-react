@@ -8,17 +8,18 @@ interface State {
 	controller?: AbortController;
 	fallback?: ReactNode;
 	forceUpdate: () => void;
+	Ref?: StateRef;
 }
 
 export function WithEffect<P extends object>(
 	lambda: (props: P, StateRef: StateRef) => Effect.Effect<JSX.Element, never, never>
 ) {
 	const Inner = ({ props, state }: { props: P, state: RefObject<State> }) => {
-		const Ref = useRef(new StateRef(() => state.current.forceUpdate()));
+		state.current.Ref ??= new StateRef(() => state.current.forceUpdate());
 		state.current.controller ??= new AbortController();
 		const signal = state.current.controller.signal;
 		state.current.promise ??= Effect.runPromise(
-			lambda(props, Ref.current),
+			lambda(props, state.current.Ref),
 			{ signal }
 		);
 		const jsx = use(state.current.promise);
