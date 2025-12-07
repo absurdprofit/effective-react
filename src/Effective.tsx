@@ -17,14 +17,17 @@ class Random extends Context.Tag("MyRandomService")<
   { readonly next: Effect.Effect<number> }
 >() {}
 
-export const EffectiveComponent = WithEffect((props: Props) => {
+export const EffectiveComponent = WithEffect((props: Props, StateRef) => {
 	const effect = Effect.gen(function* () {
+		const state = yield* StateRef.make(0);
 		const onClick = yield* CallbackEffect((event: MouseEvent) => (
 			Effect.gen(function* () {
+				yield* StateRef.set(state, 1);
 				const random = yield* Random;
 				yield* Console.log('Button Click but in a generator', event, yield* random.next);
 			})
 		));
+		yield* StateRef.set(state, 0);
 		const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);
 		const date = yield* Effect.sync(() => new Date());
 		const dog = yield* Effect.tryPromise({
@@ -44,6 +47,7 @@ export const EffectiveComponent = WithEffect((props: Props) => {
 		return (
 			<div>
 				<button onClick={onClick}>Click Me!</button>
+				<p>State {yield* StateRef.get(state)}</p>
 				<h1>Effect + React</h1>
 				<p>Current date and time: {date.toString()}</p>
 				<p>Index from parent: {props.index}</p>

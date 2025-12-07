@@ -16,15 +16,45 @@ interface FiberStamped {
   [FIBER_BRAND]?: number;
 }
 
-export const make = <A>(value: A) => {
-  return Effect.gen(function* () {
-    const fiberId = yield* Effect.fiberId;
-    const ref = yield* Ref.make(value);
+export class StateRef {
+  #forceUpdate;
+
+  constructor(forceUpdate: () => void) {
+    this.#forceUpdate = forceUpdate;
+  }
+
+  #getFiberId(value: unknown) {
+    if (typeof value === 'object' && value !== null)
+      return (value as FiberStamped)[FIBER_BRAND];
+    return null;
+  }
+
+  #fiberBrandRef<A>(ref: Ref.Ref<A>, fiberId: FiberId.FiberId) {
     if (!FiberId.isComposite(fiberId))
       (ref as unknown as FiberStamped)[FIBER_BRAND] = fiberId.id;
+  }
 
-    return ref;
-  });
-};
+  public make = <A>(value: A) => {
+    const fiberBrandRef = this.#fiberBrandRef;
+    return Effect.gen(function* () {
+      const fiberId = yield* Effect.fiberId;
+      const ref = yield* Ref.make(value);
+      fiberBrandRef(ref, fiberId);
 
-export const get = Ref.get;
+      return ref;
+    });
+  };
+
+  public get = Ref.get;
+
+  public set = <A>(self: Ref.Ref<A>, value: A) => {
+    const getFiberId = this.#getFiberId;
+    const forceUpdate = this.#forceUpdate;
+    return Effect.gen(function* () {
+      yield* Ref.set(self, value);
+      const fiberId = yield* Effect.fiberId;
+      if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id)
+        forceUpdate();
+    });
+  };
+}
