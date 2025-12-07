@@ -21,8 +21,8 @@ export const EffectiveComponent = WithEffect((props: Props, StateRef) => {
 		const state = yield* StateRef.make('state', 0);
 		const onClick = yield* CallbackEffect(() => (
 			Effect.gen(function* () {
-				const random = yield* Random;
-				yield* StateRef.set(state, (yield* random.next) * ALL_STATUS_CODES.length);
+				const random = yield* (yield* Random).next;
+				yield* StateRef.update(state, (n) => n + random);
 			})
 		));
 		const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);

@@ -66,9 +66,27 @@ export class StateRef {
         yield* Ref.set(self, value);
 
         const fiberId = yield* Effect.fiberId;
-        if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id) {
+        if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id)
           yield* Effect.sync(forceUpdate);
-        }
+      });
+    }
+  );
+
+  public update = dual<
+    <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<void>,
+    <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<void>
+  >(
+    2,
+    <A>(self: Ref.Ref<A>, f: (a: A) => A) => {
+      const getFiberId = this.#getFiberId;
+      const forceUpdate = this.#forceUpdate;
+
+      return Effect.gen(function* () {
+        yield* Ref.update(self, f);
+
+        const fiberId = yield* Effect.fiberId;
+        if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id)
+          yield* Effect.sync(forceUpdate);
       });
     }
   );
