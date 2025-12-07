@@ -1,7 +1,6 @@
-import { Context, Effect } from "effect";
+import { Effect } from "effect";
 import { WithEffect } from "./effective-react/WithEffect";
 import { ALL_STATUS_CODES } from "./constants";
-import { CallbackEffect } from "./effective-react/CallbackEffect";
 
 const GLOBAL = {
 	renders: Number(),
@@ -11,20 +10,8 @@ interface Props {
 	index: number;
 }
 
-class Random extends Context.Tag("MyRandomService")<
-  Random,
-  { readonly next: Effect.Effect<number> }
->() {}
-
-export const EffectiveComponent = WithEffect((props: Props, StateRef) => {
-	const effect = Effect.gen(function* () {
-		const state = yield* StateRef.make('state', 0);
-		const onClick = yield* CallbackEffect(() => (
-			Effect.gen(function* () {
-				const random = yield* (yield* Random).next;
-				yield* StateRef.update(state, (n) => n + random);
-			})
-		));
+export const Figure = WithEffect((props: Props) =>
+	Effect.gen(function* () {
 		const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);
 		const date = yield* Effect.sync(() => new Date());
 		const dog = yield* Effect.tryPromise({
@@ -43,8 +30,6 @@ export const EffectiveComponent = WithEffect((props: Props, StateRef) => {
 
 		return (
 			<div>
-				<button onClick={onClick}>Click Me!</button>
-				<p>State {yield* StateRef.get(state)}</p>
 				<h1>Effect + React</h1>
 				<p>Current date and time: {date.toString()}</p>
 				<p>Index from parent: {props.index}</p>
@@ -53,9 +38,5 @@ export const EffectiveComponent = WithEffect((props: Props, StateRef) => {
 				<img src={dog.url} alt="Random Dog" width={300} height={300} />
 			</div>
 		);
-	});
-	
-	return Effect.provideService(effect, Random, {
-		next: Effect.sync(() => Math.random())
-	});
-});
+	})
+);

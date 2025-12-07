@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './App.css'
-import { EffectiveComponent } from './Effective'
+import { Figure } from './Figure'
+import { Die } from './Die';
 
 const GLOBAL = {
   renders: Number(),
@@ -18,7 +19,8 @@ function App() {
 
   return (
     <div>
-      <EffectiveComponent
+      <Die />
+      <Figure
         index={count}
         fallback={<div style={fallbackStyle}>Loading...</div>}
       />
