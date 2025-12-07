@@ -14,13 +14,9 @@ export function WithEffect<P extends object>(
 	const Inner = ({ props, state }: { props: P, state: RefObject<State> }) => {
 		state.current.controller ??= new AbortController();
 		const signal = state.current.controller.signal;
-		state.current.promise ??= Effect
-			.runPromise(lambda(props), { signal })
-			.then(jsx => {
-				state.current.fallback = jsx;
-				return jsx;
-			});
+		state.current.promise ??= Effect.runPromise(lambda(props), { signal });
 		const jsx = use(state.current.promise);
+		state.current.fallback = jsx;
 
 		return jsx;
 	}
@@ -33,6 +29,7 @@ export function WithEffect<P extends object>(
 			state.current.controller = undefined;
 		}
 		const fallback = state.current.fallback ?? props.fallback;
+
 		return (
 			<Suspense fallback={fallback}>
 				<Inner props={props} state={state} />
