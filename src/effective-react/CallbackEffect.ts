@@ -5,7 +5,7 @@ export function CallbackEffect<A extends unknown[], R>(
 ) {
 	return Effect.gen(function* () {
 		const runtime = yield* Effect.runtime<R>();
-		return yield* Effect.sync((...args: A) => {
+		return yield* Effect.succeed((...args: A) => {
 			Runtime.runFork(runtime, lambda(...args));
 		});
 	});
