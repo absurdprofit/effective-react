@@ -1,7 +1,7 @@
 import { Effect, Layer, Ref } from "effect";
 import { Suspense, use, useDeferredValue, useReducer, useRef, type JSX, type ReactNode, type RefObject } from "react";
-import { diff } from "./common/utils";
 import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./ReactContext";
+import { diff } from "./common/utils";
 
 interface State {
 	promise?: Promise<JSX.Element>;

@@ -58,8 +58,8 @@ export const set = dual<
       const fiberId = yield* Effect.fiberId;
       if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id) {
         const context = yield* ReactContext;
-        const forceUpdate = context[SCHEDULE_UPDATE_SYMBOL];
-        yield* Effect.sync(forceUpdate);
+        const ScheduleUpdate = context[SCHEDULE_UPDATE_SYMBOL];
+        yield* Effect.sync(ScheduleUpdate);
       }
     });
   }
@@ -77,8 +77,8 @@ export const update = dual<
       const fiberId = yield* Effect.fiberId;
       if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id) {
         const context = yield* ReactContext;
-        const forceUpdate = context[SCHEDULE_UPDATE_SYMBOL];
-        yield* Effect.sync(forceUpdate);
+        const ScheduleUpdate = context[SCHEDULE_UPDATE_SYMBOL];
+        yield* Effect.sync(ScheduleUpdate);
       }
     });
   }
