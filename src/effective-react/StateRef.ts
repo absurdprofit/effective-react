@@ -1,7 +1,8 @@
 import { FiberId, Effect, Ref } from "effect";
 import { dual } from "effect/Function";
+import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./ReactContext";
 
-const FIBER_BRAND = Symbol('effective/FiberId');
+const FIBER_ID_SYMBOL = Symbol('effective/FiberId');
 
 /**
  * FiberIds will be compared at write time.
@@ -14,80 +15,71 @@ const FIBER_BRAND = Symbol('effective/FiberId');
  * To omit the branding on a ref ensures all comparisons of FiberIds will be falsy.
  */
 interface FiberStamped {
-  [FIBER_BRAND]?: number;
+  [FIBER_ID_SYMBOL]?: number;
 }
 
-export class StateRef {
-  #forceUpdate;
-  #registry = new Map<string, Ref.Ref<unknown>>;
+function getFiberId(value: unknown) {
+  if (typeof value === 'object' && value !== null)
+    return (value as FiberStamped)[FIBER_ID_SYMBOL];
+}
 
-  constructor(forceUpdate: () => void) {
-    this.#forceUpdate = forceUpdate;
-  }
+function fiberBrandRef<A>(ref: Ref.Ref<A>, fiberId: FiberId.FiberId) {
+  if (!FiberId.isComposite(fiberId))
+    (ref as unknown as FiberStamped)[FIBER_ID_SYMBOL] = fiberId.id;
+}
 
-  #getFiberId(value: unknown) {
-    if (typeof value === 'object' && value !== null)
-      return (value as FiberStamped)[FIBER_BRAND];
-  }
+export const make = <A>(key: string, value: A) => {
+  return Effect.gen(function* () {
+    const context = yield* ReactContext;
+    const registry = context[REFS_SYMBOL];
+    let ref;
+    if (yield* Effect.sync(() => registry.has(key)))
+      ref = yield* Effect.sync(() => registry.get(key) as Ref.Ref<A>);
+    ref ??= yield* Ref.make(value);
+    const fiberId = yield* Effect.fiberId;
+    fiberBrandRef(ref, fiberId);
+    yield* Effect.sync(() => registry.set(key, ref as Ref.Ref<unknown>));
 
-  #fiberBrandRef<A>(ref: Ref.Ref<A>, fiberId: FiberId.FiberId) {
-    if (!FiberId.isComposite(fiberId))
-      (ref as unknown as FiberStamped)[FIBER_BRAND] = fiberId.id;
-  }
+    return ref;
+  });
+};
 
-  public make = <A>(key: string, value: A) => {
-    const fiberBrandRef = this.#fiberBrandRef;
-    const registry = this.#registry;
+export const get = Ref.get;
+
+export const set = dual<
+  <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<void, never, ReactContext>,
+  <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<void, never, ReactContext>
+>(
+  2,
+  <A>(self: Ref.Ref<A>, value: A) => {
     return Effect.gen(function* () {
-      let ref;
-      if (yield* Effect.sync(() => registry.has(key)))
-        ref = yield* Effect.sync(() => registry.get(key) as Ref.Ref<A>);
-      ref ??= yield* Ref.make(value);
+      yield* Ref.set(self, value);
+
       const fiberId = yield* Effect.fiberId;
-      fiberBrandRef(ref, fiberId);
-      yield* Effect.sync(() => registry.set(key, ref as Ref.Ref<unknown>));
-
-      return ref;
+      if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id) {
+        const context = yield* ReactContext;
+        const forceUpdate = context[SCHEDULE_UPDATE_SYMBOL];
+        yield* Effect.sync(forceUpdate);
+      }
     });
-  };
+  }
+);
 
-  public get = Ref.get;
+export const update = dual<
+  <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<void, never, ReactContext>,
+  <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<void, never, ReactContext>
+>(
+  2,
+  <A>(self: Ref.Ref<A>, f: (a: A) => A) => {
+    return Effect.gen(function* () {
+      yield* Ref.update(self, f);
 
-  public set = dual<
-    <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<void>,
-    <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<void>
-  >(
-    2,
-    <A>(self: Ref.Ref<A>, value: A) => {
-      const getFiberId = this.#getFiberId;
-      const forceUpdate = this.#forceUpdate;
-
-      return Effect.gen(function* () {
-        yield* Ref.set(self, value);
-
-        const fiberId = yield* Effect.fiberId;
-        if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id)
-          yield* Effect.sync(forceUpdate);
-      });
-    }
-  );
-
-  public update = dual<
-    <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<void>,
-    <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<void>
-  >(
-    2,
-    <A>(self: Ref.Ref<A>, f: (a: A) => A) => {
-      const getFiberId = this.#getFiberId;
-      const forceUpdate = this.#forceUpdate;
-
-      return Effect.gen(function* () {
-        yield* Ref.update(self, f);
-
-        const fiberId = yield* Effect.fiberId;
-        if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id)
-          yield* Effect.sync(forceUpdate);
-      });
-    }
-  );
-}
+      const fiberId = yield* Effect.fiberId;
+      if (FiberId.isComposite(fiberId) || getFiberId(self) !== fiberId.id) {
+        const context = yield* ReactContext;
+        const forceUpdate = context[SCHEDULE_UPDATE_SYMBOL];
+        yield* Effect.sync(forceUpdate);
+      }
+    });
+  }
+);

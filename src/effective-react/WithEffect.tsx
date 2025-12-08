@@ -1,25 +1,36 @@
-import { Effect } from "effect";
+import { Effect, Layer, Ref } from "effect";
 import { Suspense, use, useDeferredValue, useReducer, useRef, type JSX, type ReactNode, type RefObject } from "react";
 import { diff } from "./common/utils";
-import { StateRef } from "./StateRef";
+import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./ReactContext";
 
 interface State {
 	promise?: Promise<JSX.Element>;
 	controller?: AbortController;
 	fallback?: ReactNode;
 	forceUpdate: () => void;
-	Ref?: StateRef;
+	Refs?: Map<string, Ref.Ref<unknown>>;
 }
 
 export function WithEffect<P extends object>(
-	lambda: (props: P, StateRef: StateRef) => Effect.Effect<JSX.Element, never, never>
+	lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext>
 ) {
 	const Inner = ({ props, state }: { props: P, state: RefObject<State> }) => {
-		state.current.Ref ??= new StateRef(() => state.current.forceUpdate());
+		state.current.Refs ??= new Map();
 		state.current.controller ??= new AbortController();
 		const signal = state.current.controller.signal;
 		state.current.promise ??= Effect.runPromise(
-			lambda(props, state.current.Ref),
+			lambda(props)
+				.pipe(
+					Effect.provide(
+						Layer.succeed(
+							ReactContext,
+							{
+								[SCHEDULE_UPDATE_SYMBOL]: () => state.current.forceUpdate(),
+								[REFS_SYMBOL]: state.current.Refs
+							}
+						)
+					)
+				),
 			{ signal }
 		);
 		const jsx = use(state.current.promise);

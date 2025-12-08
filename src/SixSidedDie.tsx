@@ -1,6 +1,7 @@
 import { Context, Effect } from "effect";
 import { WithEffect } from "./effective-react/WithEffect";
 import { CallbackEffect } from "./effective-react/CallbackEffect";
+import * as StateRef from './effective-react/StateRef';
 
 class Random extends Context.Tag("MyRandomService")<
   Random,
@@ -8,7 +9,7 @@ class Random extends Context.Tag("MyRandomService")<
 >() {}
 
 const SIDES = 6;
-export const SixSidedDie = WithEffect((_, StateRef) => {
+export const SixSidedDie = WithEffect(() => {
   const effect = Effect.gen(function* () {
     const random = yield* Random;
     const side = yield* StateRef.make('side', yield* random.next);
