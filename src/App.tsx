@@ -19,8 +19,8 @@ function App() {
 
   return (
     <div>
-      {/* <SixSidedDie /> */}
       <Suspense fallback={<div style={fallbackStyle}>Loading...</div>}>
+        <SixSidedDie />
         <Figure index={count} />
       </Suspense>
       <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
