@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import './App.css'
 import { Figure } from './Figure'
 import { SixSidedDie } from './SixSidedDie';
@@ -19,11 +19,10 @@ function App() {
 
   return (
     <div>
-      <SixSidedDie />
-      <Figure
-        index={count}
-        fallback={<div style={fallbackStyle}>Loading...</div>}
-      />
+      {/* <SixSidedDie /> */}
+      <Suspense fallback={<div style={fallbackStyle}>Loading...</div>}>
+        <Figure index={count} />
+      </Suspense>
       <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
         <button onClick={() => setCount(count - 1)}>Previous</button>
         <button onClick={() => setCount(count + 1)}>Next</button>
