@@ -7,7 +7,7 @@ const FIBER_ID_SYMBOL = Symbol('effective/FiberId');
 /**
  * FiberIds will be compared at write time.
  * If fibers match (update in render) we skip re-render.
- * If not we force re-render to ensure effect re-computes correct JSX.
+ * If not we force a re-render to ensure effect re-computes updated JSX.
  * The recommended pattern is to call StateRef.make
  * at the top level of your effect similar to hooks in React.
  * Since users can call StateRef.make anywhere the best failure mode for
