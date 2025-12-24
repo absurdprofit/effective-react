@@ -1,4 +1,4 @@
-import { Cause, Effect, Exit, Layer, Ref } from "effect";
+import { Cause, Scope, Effect, Exit, Layer, Ref } from "effect";
 import { use, useReducer, useRef, type JSX, type RefObject } from "react";
 import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./ReactContext";
 import { FORCE_UPDATE_STEP } from "./common/constants";
@@ -9,10 +9,11 @@ interface State {
 	jsx?: JSX.Element;
 	rerender: () => void;
 	Refs?: Map<string, Ref.Ref<unknown>>;
+	Scope?: Scope.CloseableScope;
 }
 
 const RenderFactory = <P extends object,>(
-	lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext>
+	lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
 ) => {
 	return (
 		props: P,
@@ -32,6 +33,15 @@ const RenderFactory = <P extends object,>(
 								[REFS_SYMBOL]: state.current.Refs
 							}
 						)
+					),
+					Effect.provide(
+						Layer.effect(Scope.Scope, Effect.gen(function* () {
+							if (state.current.Scope)
+								yield* Scope.close(state.current.Scope, Exit.void);
+							state.current.Scope = yield* Scope.make();
+
+							return state.current.Scope;
+						}))
 					)
 				),
 			{ signal }
@@ -49,7 +59,7 @@ const RenderFactory = <P extends object,>(
 }
 
 export function WithEffect<P extends object>(
-	lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext>
+	lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
 ) {
 	const render = RenderFactory(lambda);
 	const store = new WeakMap<P, State>();
