@@ -1,3 +1,4 @@
+import { ViewTransition } from 'react';
 import { Effect } from "effect";
 import { WithEffect } from "./effective-react/WithEffect";
 import { ALL_STATUS_CODES } from "./constants";
@@ -35,7 +36,9 @@ export const Figure = WithEffect((props: Props) =>
 				<p>Index from parent: {props.index}</p>
 				<p>Status Code: {statusCode}</p>
 				<p>Renders so far: {++GLOBAL.renders}</p>
-				<img src={dog.url} alt="Random Dog" width={300} height={300} />
+				<ViewTransition key={'dog'}>
+					<img src={dog.url} alt="Random Dog" width={300} height={300} />
+				</ViewTransition>
 			</div>
 		);
 	})

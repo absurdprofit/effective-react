@@ -19,13 +19,13 @@ const useSide = new UseState(Effect.gen(function* () {
 }));
 export const SixSidedDie = WithEffect(() => {
   const effect = Effect.gen(function* () {
-    const random = yield* Random;
     const ref = yield* useRef();
     const side = yield* useSide();
     const renders = yield* useRenders();
-    yield* StateRef.update(renders, (n) => n + 1);
+    yield* StateRef.update(renders, (n) => ++n);
     const onClick = yield* CallbackEffect(() => (
       Effect.gen(function* () {
+        const random = yield* Random;
         yield* StateRef.set(side, yield* random.next);
       })
     ));

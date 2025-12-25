@@ -1,5 +1,5 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from "effect";
-import { use, useReducer, useRef, type JSX, type RefObject } from "react";
+import { use, useReducer, useRef, startTransition, type JSX, type RefObject } from "react";
 import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./ReactContext";
 import { FORCE_UPDATE_STEP } from "./common/constants";
 
@@ -72,7 +72,7 @@ export function WithEffect<P extends object>(
 			).then(jsx => {
 				if (state.current.jsx) {
 					state.current.jsx = jsx;
-					forceUpdate();
+					startTransition(forceUpdate);
 				}
 
 				return jsx;

@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useState, ViewTransition } from 'react';
 import './App.css'
 import { Figure } from './Figure'
 import { SixSidedDie } from './SixSidedDie';
@@ -14,13 +14,19 @@ const fallbackStyle = {
   alignItems: 'center',
   justifyContent: 'center',
 };
+
+const Loading = <div style={fallbackStyle}>Loading...</div>;
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <div>
-      <Suspense fallback={<div style={fallbackStyle}>Loading...</div>}>
-        <SixSidedDie />
+      <ViewTransition>
+        <Suspense fallback={<div>Six Sided Die</div>}>
+          <SixSidedDie />
+        </Suspense>
+      </ViewTransition>
+      <Suspense fallback={Loading}>
         <Figure index={count} />
       </Suspense>
       <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
