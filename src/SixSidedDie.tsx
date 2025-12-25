@@ -11,9 +11,9 @@ class Random extends Context.Tag("MyRandomService")<
 >() {}
 
 const SIDES = 6;
-const useRenders = UseState(Number());
-const useRef = UseState(createRef<HTMLDivElement>());
-const useSide = UseState(Effect.gen(function* () {
+const useRenders = new UseState(Number());
+const useRef = new UseState(createRef<HTMLDivElement>());
+const useSide = new UseState(Effect.gen(function* () {
   const random = yield* Random;
   return yield* random.next;
 }));
