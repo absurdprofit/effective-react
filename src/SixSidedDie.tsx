@@ -11,21 +11,18 @@ class Random extends Context.Tag("MyRandomService")<
 >() {}
 
 const SIDES = 6;
-const useRenders = new UseState(Number());
-const useRef = new UseRef<HTMLDivElement>();
-const useSide = new UseState(Effect.gen(function* () {
-  const random = yield* Random;
-  return yield* random.next;
-}));
+const useRenders = new UseState();
+const useRef = new UseRef();
+const useSide = new UseState();
 export const SixSidedDie = WithEffect(() => {
   const effect = Effect.gen(function* () {
-    const ref = yield* useRef();
-    const side = yield* useSide();
-    const renders = yield* useRenders();
+    const random = yield* Random;
+    const ref = yield* useRef<HTMLDivElement>();
+    const side = yield* useSide(yield* random.next);
+    const renders = yield* useRenders(Number());
     yield* StateRef.update(renders, (n) => ++n);
     const onClick = yield* CallbackEffect(() => (
       Effect.gen(function* () {
-        const random = yield* Random;
         yield* StateRef.set(side, yield* random.next);
       })
     ));

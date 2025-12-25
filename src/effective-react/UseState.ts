@@ -2,23 +2,23 @@ import { Effect, Ref } from 'effect';
 import * as StateRef from './StateRef';
 import type { ReactContext } from './ReactContext';
 
-type UseState<A, R> = () => Effect.Effect<Ref.Ref<A>, never, R>;
+type UseState = <A, R = never>(
+  initial: A | Effect.Effect<A, never, R>
+) => Effect.Effect<Ref.Ref<A>, never, R | ReactContext>;
 type UseStateConstructor = {
-  new<A, R = never>(
-    initial: A | Effect.Effect<A, never, R>
-  ): UseState<A, R | ReactContext>;
+  new(): UseState;
 }
 
-export const UseState = function<A, R = never>(
-  initial: A | Effect.Effect<A, never, R>
-) {
+export const UseState = function() {
   const key = Symbol();
 
-  return () => (
+  let _initial;
+  return <A, R = never>(initial: A | Effect.Effect<A, never, R>) => (
     Effect.gen(function* () {
-      if (Effect.isEffect(initial))
-        initial = yield* initial;
-      return yield* StateRef.make<A>(key, initial);
+      _initial ??= initial;
+      if (Effect.isEffect(_initial))
+        _initial = yield* _initial;
+      return yield* StateRef.make<A>(key, _initial);
     })
   );
 } as unknown as UseStateConstructor;

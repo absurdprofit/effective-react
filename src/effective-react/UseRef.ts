@@ -3,15 +3,16 @@ import * as StateRef from './StateRef';
 import type { ReactContext } from './ReactContext';
 import React, { createRef } from 'react';
 
-type UseRef<A, R> = () => Effect.Effect<React.RefObject<A | null>, never, R>;
+type UseRef = <A>() =>
+    Effect.Effect<React.RefObject<A | null>, never, ReactContext>;
 type UseRefConstructor = {
-  new<A>(): UseRef<A, ReactContext>;
+  new(): UseRef;
 }
 
-export const UseRef = function<A>() {
+export const UseRef = function() {
   const key = Symbol();
 
-  return () => (
+  return <A>() => (
     Effect.gen(function* () {
       const ref = yield* StateRef.make<React.RefObject<A | null>>(
         key,
