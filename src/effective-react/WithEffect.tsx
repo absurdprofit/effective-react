@@ -1,6 +1,6 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from "effect";
 import { use, useReducer, useRef, startTransition, type JSX, type RefObject } from "react";
-import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./ReactContext";
+import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, ENABLE_TRANSITION_SYMBOL } from "./ReactContext";
 import { FORCE_UPDATE_STEP } from "./common/constants";
 
 interface State {
@@ -8,6 +8,7 @@ interface State {
 	controller?: AbortController;
 	jsx?: JSX.Element;
 	rerender: () => void;
+	transition: boolean;
 	Refs?: Map<unknown, Ref.Ref<unknown>>;
 	Scope?: Scope.CloseableScope;
 }
@@ -30,7 +31,10 @@ const RenderFactory = <P extends object,>(
 							ReactContext,
 							{
 								[SCHEDULE_UPDATE_SYMBOL]: () => state.current.rerender(),
-								[REFS_SYMBOL]: state.current.Refs
+								[REFS_SYMBOL]: state.current.Refs,
+								[ENABLE_TRANSITION_SYMBOL]: (transition: boolean) => {
+									state.current.transition = transition;
+								},
 							}
 						)
 					),
@@ -72,13 +76,16 @@ export function WithEffect<P extends object>(
 			).then(jsx => {
 				if (state.current.jsx) {
 					state.current.jsx = jsx;
-					startTransition(forceUpdate);
+					if (state.current.transition)
+						startTransition(forceUpdate);
+					else
+						forceUpdate();
 				}
 
 				return jsx;
 			});
 		};
-		const state = useRef(store.get(props) ?? { rerender });
+		const state = useRef(store.get(props) ?? { rerender, transition: false });
 		const propsChanged = !store.has(props);
 		store.set(props, state.current);
 
@@ -86,6 +93,7 @@ export function WithEffect<P extends object>(
 			state.current.promise = undefined;
 			state.current.controller?.abort();
 			state.current.controller = undefined;
+			state.current.transition = false;
 			rerender();
 		};
 
@@ -93,6 +101,7 @@ export function WithEffect<P extends object>(
 			state.current.promise = undefined;
 			state.current.controller?.abort();
 			state.current.controller = undefined;
+			state.current.transition = false;
 		}
 		if (state.current.jsx) {
 			rerender();

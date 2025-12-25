@@ -2,6 +2,7 @@ import { ViewTransition } from 'react';
 import { Effect } from "effect";
 import { WithEffect } from "./effective-react/WithEffect";
 import { ALL_STATUS_CODES } from "./constants";
+import { EnableTransition } from './effective-react/Transition';
 
 const GLOBAL = {
 	renders: Number(),
@@ -13,6 +14,7 @@ interface Props {
 
 export const Figure = WithEffect((props: Props) =>
 	Effect.gen(function* () {
+		yield* EnableTransition;
 		const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);
 		const date = yield* Effect.sync(() => new Date());
 		const dog = yield* Effect.tryPromise({
