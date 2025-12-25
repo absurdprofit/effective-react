@@ -3,6 +3,7 @@ import { WithEffect } from "./effective-react/WithEffect";
 import { CallbackEffect } from "./effective-react/CallbackEffect";
 import * as StateRef from './effective-react/StateRef';
 import { createRef } from "react";
+import { UseState } from "./effective-react/UseState";
 
 class Random extends Context.Tag("MyRandomService")<
   Random,
@@ -10,12 +11,18 @@ class Random extends Context.Tag("MyRandomService")<
 >() {}
 
 const SIDES = 6;
+const useRenders = UseState(Number());
+const useRef = UseState(createRef<HTMLDivElement>());
+const useSide = UseState(Effect.gen(function* () {
+  const random = yield* Random;
+  return yield* random.next;
+}));
 export const SixSidedDie = WithEffect(() => {
   const effect = Effect.gen(function* () {
     const random = yield* Random;
-    const ref = yield* StateRef.make('ref', createRef<HTMLDivElement>());
-    const side = yield* StateRef.make('side', yield* random.next);
-    const renders = yield* StateRef.make('renders', Number());
+    const ref = yield* useRef();
+    const side = yield* useSide();
+    const renders = yield* useRenders();
     yield* StateRef.update(renders, (n) => n + 1);
     const onClick = yield* CallbackEffect(() => (
       Effect.gen(function* () {
@@ -23,7 +30,6 @@ export const SixSidedDie = WithEffect(() => {
       })
     ));
 
-    console.log('SixSidedDie', yield* StateRef.get(ref));
     return (
       <div ref={yield* StateRef.get(ref)}>
         <p>Six Sided Die</p>

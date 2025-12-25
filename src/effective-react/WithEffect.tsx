@@ -8,7 +8,7 @@ interface State {
 	controller?: AbortController;
 	jsx?: JSX.Element;
 	rerender: () => void;
-	Refs?: Map<string, Ref.Ref<unknown>>;
+	Refs?: Map<unknown, Ref.Ref<unknown>>;
 	Scope?: Scope.CloseableScope;
 }
 
