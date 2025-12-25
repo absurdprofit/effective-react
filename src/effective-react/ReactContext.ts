@@ -1,8 +1,5 @@
 import { Context, Ref } from "effect";
-
-export const SCHEDULE_UPDATE_SYMBOL = Symbol('effective/ScheduleUpdate');
-export const REFS_SYMBOL = Symbol('effective/Refs');
-export const ENABLE_TRANSITION_SYMBOL = Symbol('effective/TransitionFlag');
+import type { ENABLE_TRANSITION_SYMBOL, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./common/constants";
 
 export class ReactContext extends Context.Tag('effective/ReactContext')<
   ReactContext,

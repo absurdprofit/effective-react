@@ -14,7 +14,7 @@ const SIDES = 6;
 const useRenders = new UseState();
 const useRef = new UseRef();
 const useSide = new UseState();
-export const SixSidedDie = WithEffect(() => {
+export const { SixSidedDie } = WithEffect(() => {
   const effect = Effect.gen(function* () {
     const random = yield* Random;
     const ref = yield* useRef<HTMLDivElement>();

@@ -1,6 +1,7 @@
 import { FiberId, Effect, Ref } from "effect";
 import { dual } from "effect/Function";
-import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./ReactContext";
+import { ReactContext } from "./ReactContext";
+import { REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./common/constants";
 
 const FIBER_ID_SYMBOL = Symbol('effective/FiberId');
 

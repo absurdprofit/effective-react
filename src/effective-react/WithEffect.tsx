@@ -1,7 +1,7 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from "effect";
 import { use, useReducer, useRef, startTransition, type JSX, type RefObject } from "react";
-import { ReactContext, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, ENABLE_TRANSITION_SYMBOL } from "./ReactContext";
-import { FORCE_UPDATE_STEP } from "./common/constants";
+import { ReactContext } from "./ReactContext";
+import { ENABLE_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./common/constants";
 
 interface State {
 	promise?: Promise<JSX.Element | undefined>;
@@ -67,7 +67,7 @@ export function WithEffect<P extends object>(
 ) {
 	const render = RenderFactory(lambda);
 	const store = new WeakMap<P, State>();
-	return function Component(props: P) {
+	function Component(props: P) {
 		const [, forceUpdate] = useReducer((t) => t + FORCE_UPDATE_STEP, Number());
 		const rerender = () => {
 			state.current.promise ??= render(
@@ -113,6 +113,11 @@ export function WithEffect<P extends object>(
 			
 			return jsx;
 		}
-
 	}
+
+	return new Proxy({} as Record<string, typeof Component>, {
+		get(_, key) {
+			return Object.defineProperty(Component, 'name', { value: key });
+		}
+	});
 }

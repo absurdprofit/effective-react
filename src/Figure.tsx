@@ -12,7 +12,7 @@ interface Props {
 	index: number;
 }
 
-export const Figure = WithEffect((props: Props) =>
+export const { Figure } = WithEffect((props: Props) =>
 	Effect.gen(function* () {
 		yield* EnableTransition;
 		const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);

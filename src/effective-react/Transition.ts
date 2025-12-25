@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { ReactContext, ENABLE_TRANSITION_SYMBOL } from "./ReactContext";
+import { ReactContext } from "./ReactContext";
+import { ENABLE_TRANSITION_SYMBOL } from "./common/constants";
 
 export const EnableTransition = Effect.gen(function* () {
   const context = yield* ReactContext;
