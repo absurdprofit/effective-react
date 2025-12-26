@@ -25,5 +25,12 @@
   "bugs": {
     "url": "https://github.com/absurdprofit/effective-react/issues"
   },
-  "homepage": "https://github.com/absurdprofit/effective-react#readme"
+  "homepage": "https://github.com/absurdprofit/effective-react#readme",
+  "peerDependencies": {
+    "react": "^19.2.0-0",
+    "react-dom": "^19.2.0-0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0"
+  }
 }
