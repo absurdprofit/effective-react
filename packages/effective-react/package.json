@@ -5,20 +5,18 @@
   "keywords": [],
   "author": "Nathan Johnson <absurdprofit@icloud.com>",
   "license": "MIT",
-  "main": "build/index.js",
+  "main": "src/index.ts",
   "directories": {
-    "build": "build"
+    "src": "src"
   },
   "files": [
-    "build"
+    "src"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/absurdprofit/effective-react.git"
   },
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch",
     "test:coverage": "vitest --coverage",
     "test": "vitest --run"
   },
@@ -28,7 +26,8 @@
   "homepage": "https://github.com/absurdprofit/effective-react#readme",
   "peerDependencies": {
     "react": "^19.2.0-0",
-    "react-dom": "^19.2.0-0"
+    "react-dom": "^19.2.0-0",
+    "effect": "^3.19.8"
   },
   "devDependencies": {
     "@types/react": "^19.2.0"
