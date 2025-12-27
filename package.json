@@ -5,6 +5,8 @@
   "scripts": {
     "build": "lerna run build",
     "dev": "lerna run dev --parallel",
+    "publish": "lerna run publish --no-private --parallel",
+    "publish:dry": "lerna run publish:dry --no-private --parallel",
     "test": "lerna run test --no-private --parallel",
     "lint": "lerna run lint --parallel"
   },

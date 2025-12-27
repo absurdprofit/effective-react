@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish to jsr
 
 on:
   push:
@@ -73,9 +73,9 @@ jobs:
           fi
 
           echo $CHANGED_PACKAGES_JSON | jq -r '.[].location' | while read -r package; do
-            CURRENT_VERSION=$(jq -r '.version' $package/package.json)
+            CURRENT_VERSION=$(jq -r '.version' $package/jsr.json)
             NEW_VERSION="${CURRENT_VERSION}-${TAG_NAME}.sha-${COMMIT_HASH:0:10}"
-            jq ".version = \"${NEW_VERSION}\"" $package/package.json > $package/package.json.tmp && mv $package/package.json.tmp $package/package.json
+            jq ".version = \"${NEW_VERSION}\"" $package/jsr.json > $package/jsr.json.tmp && mv $package/jsr.json.tmp $package/jsr.json
           done
 
           echo $ALL_PACKAGES_JSON | jq -r '.[].location' | while read -r package; do
@@ -86,9 +86,9 @@ jobs:
 
           echo "versioned=true" >> "$GITHUB_OUTPUT"
 
-      - name: Assume unchanged for all package.json files
+      - name: Assume unchanged for all jsr.json files
         run: |
-          git ls-files -m | grep 'package.json' | xargs -I {} git update-index --assume-unchanged {}
+          git ls-files -m | grep 'jsr.json' | xargs -I {} git update-index --assume-unchanged {}
 
       - name: Update README
         run: |
@@ -105,4 +105,4 @@ jobs:
       - name: Publish packages
         if: ${{ steps.version.outputs.versioned == 'true' || env.TAG_NAME == 'latest' }}
         run: |
-          npx lerna publish from-package --yes --dist-tag $TAG_NAME
+          npm run publish
