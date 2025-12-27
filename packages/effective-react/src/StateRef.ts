@@ -1,9 +1,10 @@
-import { FiberId, Effect, Ref } from "effect";
-import { dual } from "effect/Function";
-import { ReactContext } from "./ReactContext";
-import { REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./common/constants";
+import { FiberId, Effect, Ref } from 'effect';
+import { dual } from 'effect/Function';
+import { ReactContext } from './ReactContext';
+import { REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
 const FIBER_ID_SYMBOL = Symbol('effective/FiberId');
+const ARITY = 2;
 
 /**
  * FiberIds will be compared at write time.
@@ -29,7 +30,10 @@ function fiberBrandRef<A>(ref: Ref.Ref<A>, fiberId: FiberId.FiberId) {
     (ref as unknown as FiberStamped)[FIBER_ID_SYMBOL] = fiberId.id;
 }
 
-export const make = <A>(key: unknown, value: A) => {
+export const make = <A>(
+  key: unknown,
+  value: A
+): Effect.Effect<Ref.Ref<A>, never, ReactContext> => {
   return Effect.gen(function* () {
     const context = yield* ReactContext;
     const registry = context[REFS_SYMBOL];
@@ -50,8 +54,10 @@ export const get = Ref.get;
 export const set = dual<
   <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<void, never, ReactContext>,
   <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<void, never, ReactContext>
+  // eslint-disable-next-line indent
 >(
-  2,
+    // eslint-disable-next-line indent
+  ARITY,
   <A>(self: Ref.Ref<A>, value: A) => {
     return Effect.gen(function* () {
       yield* Ref.set(self, value);
@@ -64,13 +70,16 @@ export const set = dual<
       }
     });
   }
+  // eslint-disable-next-line indent
 );
 
 export const update = dual<
   <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<void, never, ReactContext>,
   <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<void, never, ReactContext>
+  // eslint-disable-next-line indent
 >(
-  2,
+    // eslint-disable-next-line indent
+  ARITY,
   <A>(self: Ref.Ref<A>, f: (a: A) => A) => {
     return Effect.gen(function* () {
       yield* Ref.update(self, f);
@@ -83,4 +92,5 @@ export const update = dual<
       }
     });
   }
+  // eslint-disable-next-line indent
 );

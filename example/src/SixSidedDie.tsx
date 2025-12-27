@@ -1,16 +1,13 @@
-import { Context, Effect } from "effect";
-import { WithEffect } from "./effective-react/WithEffect";
-import { CallbackEffect } from "./effective-react/CallbackEffect";
-import * as StateRef from './effective-react/StateRef';
-import { UseState } from "./effective-react/UseState";
-import { UseRef } from "./effective-react/UseRef";
+import { Context, Effect } from 'effect';
+import { UseRef, UseState, StateRef, CallbackEffect, WithEffect } from '@absurdprofit/effective-react';
 
-class Random extends Context.Tag("MyRandomService")<
+class Random extends Context.Tag('MyRandomService')<
   Random,
   { readonly next: Effect.Effect<number> }
->() {}
+>() { }
 
 const SIDES = 6;
+const SIDE_OFFSET = 1;
 const useRenders = new UseState();
 const useRef = new UseRef();
 const useSide = new UseState();
@@ -31,13 +28,13 @@ export const { SixSidedDie } = WithEffect(() => {
       <div ref={ref}>
         <p>Six Sided Die</p>
         <button onClick={onClick}>Roll!</button>
-				<p>Side {yield* StateRef.get(side)}</p>
-				<p>Renders so far {yield* StateRef.get(renders)}</p>
+        <p>Side {yield* StateRef.get(side)}</p>
+        <p>Renders so far {yield* StateRef.get(renders)}</p>
       </div>
     );
   });
 
   return Effect.provideService(effect, Random, {
-		next: Effect.sync(() => Math.floor(Math.random() * SIDES) + 1)
-	})
+    next: Effect.sync(() => Math.floor(Math.random() * SIDES) + SIDE_OFFSET),
+  });
 });
