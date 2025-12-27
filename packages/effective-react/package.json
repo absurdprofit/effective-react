@@ -27,8 +27,9 @@
     "url": "https://github.com/absurdprofit/effective-react/issues"
   },
   "homepage": "https://github.com/absurdprofit/effective-react#readme",
-  "peerDependencies": {
-    "effect": "^3.19.8"
+  "dependencies": {
+    "effect": "^3.19.8",
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
