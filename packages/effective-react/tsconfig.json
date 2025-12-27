@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig",
   "compilerOptions": {
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "moduleResolution": "nodenext",
+    "module": "nodenext"
   },
   "include": [
     "src/**/*.tsx",
