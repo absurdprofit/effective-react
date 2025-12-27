@@ -7,6 +7,7 @@ class Random extends Context.Tag('MyRandomService')<
 >() { }
 
 const SIDES = 6;
+const SIDE_OFFSET = 1;
 const useRenders = new UseState();
 const useRef = new UseRef();
 const useSide = new UseState();
@@ -34,6 +35,6 @@ export const { SixSidedDie } = WithEffect(() => {
   });
 
   return Effect.provideService(effect, Random, {
-    next: Effect.sync(() => Math.floor(Math.random() * SIDES) + 1)
+    next: Effect.sync(() => Math.floor(Math.random() * SIDES) + SIDE_OFFSET),
   });
 });

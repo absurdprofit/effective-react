@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -6,10 +7,12 @@ export default defineConfig({
     globals: true,
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     browser: {
-      provider: 'playwright', // or 'webdriverio'
+      provider: playwright(),
       enabled: true,
-      name: 'chromium', // browser name is required
+      instances: [
+        { browser: 'chromium' },
+      ],
       headless: process.argv.includes('--run'),
     },
-  }
+  },
 });

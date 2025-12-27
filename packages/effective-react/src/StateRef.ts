@@ -4,6 +4,7 @@ import { ReactContext } from './ReactContext';
 import { REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
 const FIBER_ID_SYMBOL = Symbol('effective/FiberId');
+const ARITY = 2;
 
 /**
  * FiberIds will be compared at write time.
@@ -53,8 +54,10 @@ export const get = Ref.get;
 export const set = dual<
   <A>(value: A) => (self: Ref.Ref<A>) => Effect.Effect<void, never, ReactContext>,
   <A>(self: Ref.Ref<A>, value: A) => Effect.Effect<void, never, ReactContext>
+  // eslint-disable-next-line indent
 >(
-  2,
+    // eslint-disable-next-line indent
+  ARITY,
   <A>(self: Ref.Ref<A>, value: A) => {
     return Effect.gen(function* () {
       yield* Ref.set(self, value);
@@ -67,13 +70,16 @@ export const set = dual<
       }
     });
   }
+  // eslint-disable-next-line indent
 );
 
 export const update = dual<
   <A>(f: (a: A) => A) => (self: Ref.Ref<A>) => Effect.Effect<void, never, ReactContext>,
   <A>(self: Ref.Ref<A>, f: (a: A) => A) => Effect.Effect<void, never, ReactContext>
+  // eslint-disable-next-line indent
 >(
-  2,
+    // eslint-disable-next-line indent
+  ARITY,
   <A>(self: Ref.Ref<A>, f: (a: A) => A) => {
     return Effect.gen(function* () {
       yield* Ref.update(self, f);
@@ -86,4 +92,5 @@ export const update = dual<
       }
     });
   }
+  // eslint-disable-next-line indent
 );
