@@ -45,13 +45,13 @@ jobs:
       - name: Get tag name and commit hash
         id: git-info
         run: |
-          if [[ "${{github.event.pull_request.base.ref}}" == "main" ]]; then
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
             echo "TAG_NAME=latest" >> $GITHUB_ENV
           else
-            echo "TAG_NAME=${{github.event.pull_request.base.ref}}" >> $GITHUB_ENV
+            echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
           fi
           COMMIT_HASH=$(git rev-parse HEAD)
-          LAST_COMMIT_HASH=${{github.event.pull_request.base.sha}}
+          LAST_COMMIT_HASH=$(git rev-parse HEAD~1)
           echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
           echo "LAST_COMMIT_HASH=${LAST_COMMIT_HASH}" >> $GITHUB_ENV
 
@@ -94,7 +94,7 @@ jobs:
         run: |
           COMMIT_HASH=${{ env.COMMIT_HASH }}
           REPOSITORY="${{ github.repository }}"
-          for pkg in $(jq -r '.workspace[]' deno.json); do
+          for pkg in $(jq -r '.workspace[]' package.json); do
             file="$pkg/README.md"
             if [[ -f "$file" ]]; then
               url="https://github.com/$REPOSITORY/tree/$COMMIT_HASH/$pkg"
@@ -103,6 +103,6 @@ jobs:
           done
 
       - name: Publish packages
-        if: ${{ steps.version.outputs.versioned == 'true' }}
+        if: ${{ steps.version.outputs.versioned == 'true' || env.TAG_NAME == 'latest' }}
         run: |
-          npm run publish:dry
+          npm run publish
