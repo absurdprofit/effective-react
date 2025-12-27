@@ -1,8 +1,7 @@
 import { ViewTransition } from 'react';
 import { Effect } from "effect";
-import { WithEffect } from "./effective-react/WithEffect";
+import { EnableTransition, WithEffect } from "effective-react";
 import { ALL_STATUS_CODES } from "./constants";
-import { EnableTransition } from './effective-react/Transition';
 
 const GLOBAL = {
 	renders: Number(),

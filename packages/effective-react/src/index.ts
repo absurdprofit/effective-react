@@ -3,4 +3,5 @@ export { ReactContext } from './ReactContext';
 export * as StateRef from './StateRef';
 export { UseState } from './UseState';
 export { UseRef } from './UseRef';
-export { WithEffect } from './WithEffect.tsx';
+export { WithEffect } from './WithEffect';
+export * from './Transition';
