@@ -1,4 +1,4 @@
-import { Effect, Runtime } from "effect";
+import { Effect, Runtime } from 'effect';
 
 export function CallbackEffect<A extends unknown[], R>(
 	lambda: (...args: A) => Effect.Effect<void, never, R>

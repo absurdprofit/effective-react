@@ -1,7 +1,7 @@
-import { Cause, Scope, Effect, Exit, Layer, Ref } from "effect";
-import { use, useReducer, useRef, startTransition, type JSX, type RefObject } from "react";
-import { ReactContext } from "./ReactContext";
-import { ENABLE_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from "./common/constants";
+import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
+import { use, useReducer, useRef, startTransition, type JSX, type RefObject } from 'react';
+import { ReactContext } from './ReactContext';
+import { ENABLE_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
 interface State {
 	promise?: Promise<JSX.Element | undefined>;

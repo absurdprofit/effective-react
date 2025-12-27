@@ -1,7 +1,7 @@
 import { ViewTransition } from 'react';
-import { Effect } from "effect";
-import { EnableTransition, WithEffect } from "@absurdprofit/effective-react";
-import { ALL_STATUS_CODES } from "./constants";
+import { Effect } from 'effect';
+import { EnableTransition, WithEffect } from '@absurdprofit/effective-react';
+import { ALL_STATUS_CODES } from './constants';
 
 const GLOBAL = {
 	renders: Number(),
@@ -38,7 +38,7 @@ export const { Figure } = WithEffect((props: Props) =>
 				<p>Status Code: {statusCode}</p>
 				<p>Renders so far: {++GLOBAL.renders}</p>
 				<ViewTransition key={'dog'}>
-					<img src={dog.url} alt="Random Dog" width={300} height={300} />
+					<img src={dog.url} alt='Random Dog' width={300} height={300} />
 				</ViewTransition>
 			</div>
 		);

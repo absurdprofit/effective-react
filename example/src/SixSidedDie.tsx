@@ -1,7 +1,7 @@
-import { Context, Effect } from "effect";
-import { UseRef, UseState, StateRef, CallbackEffect, WithEffect } from "@absurdprofit/effective-react";
+import { Context, Effect } from 'effect';
+import { UseRef, UseState, StateRef, CallbackEffect, WithEffect } from '@absurdprofit/effective-react';
 
-class Random extends Context.Tag("MyRandomService")<
+class Random extends Context.Tag('MyRandomService')<
   Random,
   { readonly next: Effect.Effect<number> }
 >() {}
