@@ -1,6 +1,6 @@
 import { ViewTransition } from 'react';
 import { Effect } from "effect";
-import { EnableTransition, WithEffect } from "effective-react";
+import { EnableTransition, WithEffect } from "@absurdprofit/effective-react";
 import { ALL_STATUS_CODES } from "./constants";
 
 const GLOBAL = {

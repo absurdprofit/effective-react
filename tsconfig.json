@@ -2,7 +2,7 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "effective-react": ["./packages/effective-react/src/index.ts"]
+            "@absurdprofit/effective-react": ["./packages/effective-react/src/index.ts"]
         },
         "declaration": true,
         "sourceMap": true,

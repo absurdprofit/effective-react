@@ -1,5 +1,5 @@
 import { Context, Effect } from "effect";
-import { UseRef, UseState, StateRef, CallbackEffect, WithEffect } from "effective-react";
+import { UseRef, UseState, StateRef, CallbackEffect, WithEffect } from "@absurdprofit/effective-react";
 
 class Random extends Context.Tag("MyRandomService")<
   Random,
