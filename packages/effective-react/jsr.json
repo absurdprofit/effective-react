@@ -1,9 +1,0 @@
-{
-  "name": "@absurdprofit/effective-react",
-  "version": "0.0.0",
-  "exports": "./src/index.ts",
-  "license": "MIT",
-  "exclude": [
-    "./tests/**/*.ts"
-  ]
-}

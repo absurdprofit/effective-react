@@ -1,4 +1,4 @@
-name: Dry run publish to jsr
+name: Dry run publish to npm
 
 on:
   pull_request:
@@ -71,9 +71,9 @@ jobs:
           fi
 
           echo $CHANGED_PACKAGES_JSON | jq -r '.[].location' | while read -r package; do
-            CURRENT_VERSION=$(jq -r '.version' $package/jsr.json)
+            CURRENT_VERSION=$(jq -r '.version' $package/package.json)
             NEW_VERSION="${CURRENT_VERSION}-${TAG_NAME}.sha-${COMMIT_HASH:0:10}"
-            jq ".version = \"${NEW_VERSION}\"" $package/jsr.json > $package/jsr.json.tmp && mv $package/jsr.json.tmp $package/jsr.json
+            jq ".version = \"${NEW_VERSION}\"" $package/package.json > $package/package.json.tmp && mv $package/package.json.tmp $package/package.json
           done
 
           echo $ALL_PACKAGES_JSON | jq -r '.[].location' | while read -r package; do
@@ -84,9 +84,9 @@ jobs:
 
           echo "versioned=true" >> "$GITHUB_OUTPUT"
 
-      - name: Assume unchanged for all jsr.json files
+      - name: Assume unchanged for all package.json files
         run: |
-          git ls-files -m | grep 'jsr.json' | xargs -I {} git update-index --assume-unchanged {}
+          git ls-files -m | grep 'package.json' | xargs -I {} git update-index --assume-unchanged {}
 
       - name: Lint project
         if: ${{ steps.version.outputs.versioned == 'true' }}
@@ -96,8 +96,3 @@ jobs:
         if: ${{ steps.version.outputs.versioned == 'true' }}
         run: |
           npm run test
-
-      - name: Publish packages
-        if: ${{ steps.version.outputs.versioned == 'true' || env.TAG_NAME == 'latest' }}
-        run: |
-          npm run publish:dry
