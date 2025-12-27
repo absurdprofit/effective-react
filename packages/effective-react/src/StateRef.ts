@@ -29,7 +29,10 @@ function fiberBrandRef<A>(ref: Ref.Ref<A>, fiberId: FiberId.FiberId) {
     (ref as unknown as FiberStamped)[FIBER_ID_SYMBOL] = fiberId.id;
 }
 
-export const make = <A>(key: unknown, value: A) => {
+export const make = <A>(
+  key: unknown,
+  value: A
+): Effect.Effect<Ref.Ref<A>, never, ReactContext> => {
   return Effect.gen(function* () {
     const context = yield* ReactContext;
     const registry = context[REFS_SYMBOL];

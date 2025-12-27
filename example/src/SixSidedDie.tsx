@@ -4,7 +4,7 @@ import { UseRef, UseState, StateRef, CallbackEffect, WithEffect } from '@absurdp
 class Random extends Context.Tag('MyRandomService')<
   Random,
   { readonly next: Effect.Effect<number> }
->() {}
+>() { }
 
 const SIDES = 6;
 const useRenders = new UseState();
@@ -27,13 +27,13 @@ export const { SixSidedDie } = WithEffect(() => {
       <div ref={ref}>
         <p>Six Sided Die</p>
         <button onClick={onClick}>Roll!</button>
-				<p>Side {yield* StateRef.get(side)}</p>
-				<p>Renders so far {yield* StateRef.get(renders)}</p>
+        <p>Side {yield* StateRef.get(side)}</p>
+        <p>Renders so far {yield* StateRef.get(renders)}</p>
       </div>
     );
   });
 
   return Effect.provideService(effect, Random, {
-		next: Effect.sync(() => Math.floor(Math.random() * SIDES) + 1)
-	})
+    next: Effect.sync(() => Math.floor(Math.random() * SIDES) + 1)
+  });
 });

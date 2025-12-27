@@ -1,6 +1,6 @@
 import { Suspense, useState, ViewTransition } from 'react';
-import './App.css'
-import { Figure } from './Figure'
+import './App.css';
+import { Figure } from './Figure';
 import { SixSidedDie } from './SixSidedDie';
 
 const GLOBAL = {
@@ -39,4 +39,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
