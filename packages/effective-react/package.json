@@ -19,7 +19,8 @@
     "test:coverage": "vitest --coverage",
     "test": "vitest --run",
     "publish": "npx jsr publish --allow-slow-types --allow-dirty",
-    "publish:dry": "npx jsr publish --allow-slow-types --allow-dirty --dry-run"
+    "publish:dry": "npx jsr publish --allow-slow-types --allow-dirty --dry-run",
+    "lint": "eslint ."
   },
   "bugs": {
     "url": "https://github.com/absurdprofit/effective-react/issues"
