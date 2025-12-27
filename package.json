@@ -2,11 +2,12 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "test": "lerna run test",
     "build": "lerna run build",
     "dev": "lerna run dev --parallel",
     "publish": "lerna run publish --parallel",
-    "publish:dry": "lerna run publish:dry --parallel"
+    "publish:dry": "lerna run publish:dry --parallel",
+    "test": "lerna run test --parallel",
+    "lint": "lerna run lint --parallel"
   },
   "workspaces": [
     "packages/*",
