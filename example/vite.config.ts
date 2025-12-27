@@ -5,11 +5,7 @@ import viteTsconfigPaths from 'vite-tsconfig-paths';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        // plugins: [['babel-plugin-react-compiler']],
-      },
-    }),
+    react(),
     viteTsconfigPaths()
   ],
   server: {

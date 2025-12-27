@@ -25,8 +25,6 @@
   },
   "homepage": "https://github.com/absurdprofit/effective-react#readme",
   "peerDependencies": {
-    "react": "^19.2.0-0",
-    "react-dom": "^19.2.0-0",
     "effect": "^3.19.8"
   },
   "devDependencies": {
