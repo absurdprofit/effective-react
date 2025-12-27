@@ -17,5 +17,13 @@
     "lerna": "^9.0.3",
     "vite": "^7.3.0",
     "vitest": "^4.0.16"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "engines": {
+    "node": "^22.14.0"
   }
 }

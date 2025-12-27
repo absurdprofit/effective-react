@@ -1,6 +1,5 @@
 {
   "name": "@absurdprofit/effective-react",
-  "version": "0.0.0",
   "description": "",
   "keywords": [],
   "author": "Nathan Johnson <absurdprofit@icloud.com>",
@@ -19,8 +18,8 @@
   "scripts": {
     "test:coverage": "vitest --coverage",
     "test": "vitest --run",
-    "publish": "npx jsr publish --allow-slow-types",
-    "publish:dry": "npx jsr publish --allow-slow-types --dry-run"
+    "publish": "npx jsr publish --allow-slow-types --allow-dirty",
+    "publish:dry": "npx jsr publish --allow-slow-types --allow-dirty --dry-run"
   },
   "bugs": {
     "url": "https://github.com/absurdprofit/effective-react/issues"
