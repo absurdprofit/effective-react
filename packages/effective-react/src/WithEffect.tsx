@@ -62,7 +62,7 @@ const RenderFactory = <P extends object,>(
   };
 };
 
-export function WithEffect<P extends object = never>(
+export function WithEffect<P extends object>(
   lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
 ): Record<string, (props: P) => JSX.Element | undefined> {
   const render = RenderFactory(lambda);
