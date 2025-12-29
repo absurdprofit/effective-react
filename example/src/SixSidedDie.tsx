@@ -15,7 +15,7 @@ export const { SixSidedDie } = WithEffect(() => {
   const effect = Effect.gen(function* () {
     const random = yield* Random;
     const ref = yield* useRef<HTMLDivElement>();
-    const side = yield* useSide(yield* random.next);
+    const side = yield* useSide(random.next);
     const renders = yield* useRenders(Number());
     yield* StateRef.update(renders, (n) => ++n);
     const onClick = yield* CallbackEffect(() => (

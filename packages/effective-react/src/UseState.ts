@@ -1,6 +1,7 @@
 import { Effect, Ref } from 'effect';
 import * as StateRef from './StateRef';
-import type { ReactContext } from './ReactContext';
+import { ReactContext } from './ReactContext';
+import { REFS_SYMBOL } from './common/constants';
 
 type UseState = <A, R = never>(
   initial: A | Effect.Effect<A, never, R>
@@ -12,13 +13,18 @@ type UseStateConstructor = {
 export const UseState = function() {
   const key = Symbol();
 
-  let _initial;
   return <A, R = never>(initial: A | Effect.Effect<A, never, R>) => (
     Effect.gen(function* () {
-      _initial ??= initial;
-      if (Effect.isEffect(_initial))
-        _initial = yield* _initial;
-      return yield* StateRef.make<A>(key, _initial);
+      const context = yield* ReactContext;
+      const registry = context[REFS_SYMBOL];
+      if (yield* Effect.sync(() => registry.has(key))) {
+        // initial is wrong here but with the above check we're certain it exists
+        // in which case the initial value is ignored anyway
+        return yield* StateRef.make<A>(key, initial as A);
+      }
+      if (Effect.isEffect(initial))
+        initial = yield* initial;
+      return yield* StateRef.make<A>(key, initial);
     })
   );
 } as unknown as UseStateConstructor;
