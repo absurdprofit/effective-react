@@ -1,6 +1,6 @@
 import { ViewTransition } from 'react';
-import { Effect, Schedule } from 'effect';
-import { EnableTransition, StateRef, UseState, WithEffect } from '@absurdprofit/effective-react';
+import { Effect } from 'effect';
+import { EnableTransition, StateRef, UseDeferredValue, UseState, WithEffect } from '@absurdprofit/effective-react';
 import { ALL_STATUS_CODES } from './constants';
 
 const GLOBAL = {
@@ -14,10 +14,16 @@ interface Props {
 }
 
 const useDate = new UseState();
+const usePrevStatusCode = new UseDeferredValue();
 export const { Figure } = WithEffect((props: Props) =>
   Effect.gen(function* () {
-    yield* EnableTransition;
     const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);
+    const prevStatusCode = yield* usePrevStatusCode(statusCode);
+    yield* EnableTransition.pipe(
+      Effect.when(() => (
+        prevStatusCode !== statusCode
+      ))
+    );
     const date = yield* useDate(Effect.sync(() => new Date().toString()));
     const dog = yield* Effect.tryPromise({
       try: async (signal) => {
