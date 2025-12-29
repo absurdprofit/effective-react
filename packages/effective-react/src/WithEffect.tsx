@@ -1,5 +1,5 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
-import { use, useReducer, useRef, startTransition, type JSX, type RefObject } from 'react';
+import { use, useReducer, useRef, startTransition, type JSX, type RefObject, memo } from 'react';
 import { ReactContext } from './ReactContext';
 import { ENABLE_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
@@ -117,7 +117,9 @@ export function WithEffect<P extends object>(
 
   return new Proxy({} as Record<string, typeof Component>, {
     get(_, key) {
-      return Object.defineProperty(Component, 'name', { value: key });
+      return memo(
+        Object.defineProperty(Component, 'name', { value: key })
+      );
     },
   });
 }
