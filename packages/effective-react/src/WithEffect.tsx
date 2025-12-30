@@ -100,10 +100,11 @@ export function WithEffect<P extends object>(
     store.set(props, state.current);
 
     useEffect(() => {
+      const currentState = state.current;
       clearTimeout(state.current.finaliserId);
 
       return () => {
-        state.current.finaliserId = setTimeout(finalise);
+        currentState.finaliserId = setTimeout(finalise);
       };
     }, []);
 
