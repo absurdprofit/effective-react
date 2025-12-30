@@ -1,5 +1,5 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
-import { use, useReducer, useRef, startTransition, type JSX, type RefObject, memo } from 'react';
+import { use, useReducer, useRef, startTransition, type JSX, type RefObject, memo, useEffect } from 'react';
 import { ReactContext } from './ReactContext';
 import { ENABLE_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
@@ -11,6 +11,7 @@ interface State {
   transition: boolean;
   Refs?: Map<unknown, Ref.Ref<unknown>>;
   Scope?: Scope.CloseableScope;
+  finaliserId?: number;
 }
 
 const RenderFactory = <P extends object,>(
@@ -69,6 +70,15 @@ export function WithEffect<P extends object>(
   const store = new WeakMap<P, State>();
   function Component(props: P) {
     const [, forceUpdate] = useReducer((t) => t + FORCE_UPDATE_STEP, Number());
+    const finalise = () => {
+      // unmount
+      if (!state.current.Scope)
+        return;
+      Effect.runPromise(
+        Scope.close(state.current.Scope, Exit.void)
+      );
+    };
+
     const rerender = () => {
       state.current.promise ??= render(
         props,
@@ -88,6 +98,14 @@ export function WithEffect<P extends object>(
     const state = useRef(store.get(props) ?? { rerender, transition: false });
     const propsChanged = !store.has(props);
     store.set(props, state.current);
+
+    useEffect(() => {
+      clearTimeout(state.current.finaliserId);
+
+      return () => {
+        state.current.finaliserId = setTimeout(finalise);
+      };
+    }, []);
 
     state.current.rerender = () => {
       state.current.promise = undefined;
