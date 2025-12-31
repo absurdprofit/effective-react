@@ -2,6 +2,7 @@ import { Suspense, useState, ViewTransition } from 'react';
 import './App.css';
 import { Figure } from './Figure';
 import { SixSidedDie } from './SixSidedDie';
+import { Clock } from './Clock';
 
 const GLOBAL = new Proxy(
   { renders: Number() },
@@ -31,11 +32,17 @@ function App() {
 
   return (
     <div>
+      <h1>Effect + React</h1>
+      <Suspense>
+        <Clock />
+      </Suspense>
+      <hr />
       <ViewTransition>
         <Suspense fallback={<div>Six Sided Die</div>}>
           <SixSidedDie />
         </Suspense>
       </ViewTransition>
+      <hr />
       <Suspense fallback={Loading}>
         <Figure index={count} />
       </Suspense>
