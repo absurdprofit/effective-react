@@ -15,8 +15,8 @@ interface Props {
 
 const useDate = new UseState();
 const usePrevStatusCode = new UseDeferredValue();
-export const { Figure } = WithEffect((props: Props) =>
-  Effect.gen(function* () {
+export const { Figure } = WithEffect(
+  Effect.fn(function* (props: Props) {
     const statusCode = ALL_STATUS_CODES.at(props.index % ALL_STATUS_CODES.length);
     const prevStatusCode = yield* usePrevStatusCode(statusCode);
     yield* EnableTransition.pipe(
