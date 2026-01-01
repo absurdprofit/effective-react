@@ -1,7 +1,7 @@
-import { StateRef, UseState, WithEffect } from '@absurdprofit/effective-react';
+import { StateRef, UseStateRef, WithEffect } from '@absurdprofit/effective-react';
 import { Effect } from 'effect';
 
-const useDate = new UseState();
+const useDate = new UseStateRef();
 const SECOND_IN_MS = 1000;
 export const { Clock } = WithEffect(
   Effect.fn(function* () {

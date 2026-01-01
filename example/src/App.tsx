@@ -1,8 +1,8 @@
 import { Suspense, useState, ViewTransition } from 'react';
 import './App.css';
-import { Figure } from './Figure';
-import { SixSidedDie } from './SixSidedDie';
-import { Clock } from './Clock';
+import { Figure } from './Figure.effect';
+import { SixSidedDie } from './SixSidedDie.effect';
+import { Clock } from './Clock.effect';
 
 const GLOBAL = new Proxy(
   { renders: Number() },

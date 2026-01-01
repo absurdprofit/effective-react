@@ -1,5 +1,5 @@
 import { Context, Effect } from 'effect';
-import { UseRef, UseState, StateRef, CallbackEffect, WithEffect } from '@absurdprofit/effective-react';
+import { UseRef, UseStateRef, StateRef, CallbackEffect, WithEffect } from '@absurdprofit/effective-react';
 
 class Random extends Context.Tag('MyRandomService')<
   Random,
@@ -8,9 +8,9 @@ class Random extends Context.Tag('MyRandomService')<
 
 const SIDES = 6;
 const SIDE_OFFSET = 1;
-const useRenders = new UseState();
+const useRenders = new UseStateRef();
 const useRef = new UseRef();
-const useSide = new UseState();
+const useSide = new UseStateRef();
 export const { SixSidedDie } = WithEffect(() => {
   const effect = Effect.gen(function* () {
     const random = yield* Random;

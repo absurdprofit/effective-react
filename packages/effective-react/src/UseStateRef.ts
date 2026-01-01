@@ -3,14 +3,14 @@ import * as StateRef from './StateRef';
 import { ReactContext } from './ReactContext';
 import { REFS_SYMBOL } from './common/constants';
 
-type UseState = <A, R = never>(
+type UseStateRef = <A, R = never>(
   initial: A | Effect.Effect<A, never, R>
 ) => Effect.Effect<Ref.Ref<A>, never, R | ReactContext>;
-type UseStateConstructor = {
-  new(): UseState;
+type UseStateRefConstructor = {
+  new(): UseStateRef;
 }
 
-export const UseState = function() {
+export const UseStateRef = function() {
   const key = Symbol();
 
   return <A, R = never>(initial: A | Effect.Effect<A, never, R>) => (
@@ -27,4 +27,4 @@ export const UseState = function() {
       return yield* StateRef.make<A>(key, initial);
     })
   );
-} as unknown as UseStateConstructor;
+} as unknown as UseStateRefConstructor;
