@@ -61,6 +61,15 @@ const RenderFactory = () => {
   };
 };
 
+const finalise = (state: RefObject<State>) => {
+  // unmount
+  if (!state.current.Scope)
+    return;
+  Effect.runPromise(
+    Scope.close(state.current.Scope, Exit.void)
+  );
+};
+
 export function WithEffect<P extends object>(
   lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
 ): Record<string, (props: P) => JSX.Element | undefined> {
@@ -68,14 +77,6 @@ export function WithEffect<P extends object>(
   const store = new WeakMap<P, State>();
   function Component(props: P) {
     const [, forceUpdate] = useReducer((t) => t + FORCE_UPDATE_STEP, Number());
-    const finalise = () => {
-      // unmount
-      if (!state.current.Scope)
-        return;
-      Effect.runPromise(
-        Scope.close(state.current.Scope, Exit.void)
-      );
-    };
 
     const rerender = () => {
       state.current.promise ??= render(
@@ -109,7 +110,7 @@ export function WithEffect<P extends object>(
       clearTimeout(state.current.finaliserId);
 
       return () => {
-        currentState.finaliserId = setTimeout(finalise);
+        currentState.finaliserId = setTimeout(finalise.bind(null, state));
       };
     }, []);
 
