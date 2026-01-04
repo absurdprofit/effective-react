@@ -7,6 +7,7 @@ interface State {
   promise?: Promise<JSX.Element | undefined>;
   controller?: AbortController;
   jsx?: JSX.Element;
+  effect: Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>;
   rerender: () => void;
   transition: boolean;
   Refs?: Map<unknown, Ref.Ref<unknown>>;
@@ -14,18 +15,15 @@ interface State {
   finaliserId?: number;
 }
 
-const RenderFactory = <P extends object,>(
-  lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
-) => {
+const RenderFactory = () => {
   return (
-    props: P,
     state: RefObject<State>
   ) => {
     state.current.Refs ??= new Map();
     state.current.controller ??= new AbortController();
     const signal = state.current.controller.signal;
     return Effect.runPromiseExit(
-      lambda(props)
+      state.current.effect
         .pipe(
           Effect.provide(
             Layer.succeed(
@@ -66,7 +64,7 @@ const RenderFactory = <P extends object,>(
 export function WithEffect<P extends object>(
   lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
 ): Record<string, (props: P) => JSX.Element | undefined> {
-  const render = RenderFactory(lambda);
+  const render = RenderFactory();
   const store = new WeakMap<P, State>();
   function Component(props: P) {
     const [, forceUpdate] = useReducer((t) => t + FORCE_UPDATE_STEP, Number());
@@ -81,7 +79,6 @@ export function WithEffect<P extends object>(
 
     const rerender = () => {
       state.current.promise ??= render(
-        props,
         state
       ).then(jsx => {
         if (state.current.jsx) {
@@ -95,9 +92,17 @@ export function WithEffect<P extends object>(
         return jsx;
       });
     };
-    const state = useRef(store.get(props) ?? { rerender, transition: false });
+    const effect = lambda(props);
+    const state = useRef(
+      store.get(props)
+      ?? {
+        rerender,
+        effect,
+        transition: false,
+      });
     const propsChanged = !store.has(props);
     store.set(props, state.current);
+    state.current.effect = effect;
 
     useEffect(() => {
       const currentState = state.current;
@@ -126,7 +131,7 @@ export function WithEffect<P extends object>(
       rerender();
       return state.current.jsx;
     } else {
-      state.current.promise ??= render(props, state);
+      state.current.promise ??= render(state);
       const jsx = use(state.current.promise);
       state.current.jsx = jsx;
 
