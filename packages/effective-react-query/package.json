@@ -30,7 +30,7 @@
   "homepage": "https://github.com/absurdprofit/effective-react#readme",
   "dependencies": {
     "effect": "^3.19.8",
-    "@tanstack/react-query": "^5.90.15"
+    "@tanstack/query-core": "^5.90.16"
   },
   "devDependencies": {
     "vitest": "^4.0.16",
