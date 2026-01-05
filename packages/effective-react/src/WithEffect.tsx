@@ -1,14 +1,14 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
 import { use, useReducer, useRef, startTransition, type JSX, type RefObject, memo, useEffect } from 'react';
 import { ReactContext } from './ReactContext';
-import { ENABLE_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
+import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
 interface State {
   promise?: Promise<JSX.Element | undefined>;
   controller?: AbortController;
   jsx?: JSX.Element;
   effect: Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>;
-  rerender: () => void;
+  scheduleUpdate: () => void;
   forceUpdate: React.ActionDispatch<[]>;
   transition: boolean;
   Refs?: Map<unknown, Ref.Ref<unknown>>;
@@ -16,13 +16,16 @@ interface State {
   finaliserId?: number;
 }
 
-const RenderFactory = () => {
-  return (
+function RenderFactory() {
+  return function render(
     state: RefObject<State>
-  ) => {
+  ) {
     state.current.Refs ??= new Map();
     state.current.controller ??= new AbortController();
     const signal = state.current.controller.signal;
+    function setTransition(transition: boolean) {
+      state.current.transition = transition;
+    }
     return Effect.runPromiseExit(
       state.current.effect
         .pipe(
@@ -30,11 +33,9 @@ const RenderFactory = () => {
             Layer.succeed(
               ReactContext,
               {
-                [SCHEDULE_UPDATE_SYMBOL]: () => state.current.rerender(),
+                [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
                 [REFS_SYMBOL]: state.current.Refs,
-                [ENABLE_TRANSITION_SYMBOL]: (transition: boolean) => {
-                  state.current.transition = transition;
-                },
+                [SET_TRANSITION_SYMBOL]: setTransition,
               }
             )
           ),
@@ -49,7 +50,7 @@ const RenderFactory = () => {
           )
         ),
       { signal }
-    ).then(exit => {
+    ).then(function onExit(exit) {
       if (Exit.isFailure(exit)) {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
@@ -62,7 +63,7 @@ const RenderFactory = () => {
   };
 };
 
-const finalise = (state: RefObject<State>) => {
+function finalise(state: RefObject<State>) {
   // unmount
   if (!state.current.Scope)
     return;
@@ -75,16 +76,16 @@ export function WithEffect<P extends object>(
   lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
 ): Record<string, (props: P) => JSX.Element | undefined> {
   const render = RenderFactory();
-  const reset = (state: RefObject<State>) => {
+  function reset(state: RefObject<State>) {
     state.current.promise = undefined;
     state.current.controller?.abort();
     state.current.controller = undefined;
     state.current.transition = false;
   };
-  const rerender = (state: RefObject<State>) => {
+  function rerender(state: RefObject<State>) {
     state.current.promise ??= render(
       state
-    ).then(jsx => {
+    ).then(function onJSX(jsx) {
       const forceUpdate = state.current.forceUpdate;
       if (state.current.jsx) {
         state.current.jsx = jsx;
@@ -99,13 +100,15 @@ export function WithEffect<P extends object>(
   };
   const store = new WeakMap<P, State>();
   function Component(props: P) {
-    const [, forceUpdate] = useReducer((t) => t + FORCE_UPDATE_STEP, Number());
+    const [, forceUpdate] = useReducer(function tick(t) {
+      return t + FORCE_UPDATE_STEP;
+    }, Number());
     
     const effect = lambda(props);
     const state = useRef(
       store.get(props)
       ?? {
-        rerender: () => {
+        scheduleUpdate() {
           reset(state);
           rerender(state);
         },
