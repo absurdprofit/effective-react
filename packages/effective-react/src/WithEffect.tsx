@@ -74,7 +74,7 @@ function finalise(state: RefObject<State>) {
 
 export function WithEffect<P extends object>(
   lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
-): Record<string, (props: P) => JSX.Element | undefined> {
+): Record<string, (props: P) => JSX.Element> {
   const render = RenderFactory();
   function reset(state: RefObject<State>) {
     state.current.promise = undefined;
@@ -141,7 +141,7 @@ export function WithEffect<P extends object>(
       const jsx = use(state.current.promise);
       state.current.jsx = jsx;
 
-      return jsx;
+      return jsx!;
     }
   }
 
