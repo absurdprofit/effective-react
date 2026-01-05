@@ -1,5 +1,6 @@
 import { Context, Effect } from 'effect';
 import { UseRefObject, UseStateRef, StateRef, CallbackEffect, WithEffect } from '@absurdprofit/effective-react';
+import { ViewTransition } from 'react';
 
 class Random extends Context.Tag('MyRandomService')<
   Random,
@@ -26,7 +27,9 @@ export const { SixSidedDie } = WithEffect(() => {
 
     return (
       <div ref={ref}>
-        <p>Six Sided Die</p>
+        <ViewTransition key='title'>
+          <p>Six Sided Die</p>
+        </ViewTransition>
         <button onClick={onClick}>Roll!</button>
         <p>Side {yield* StateRef.get(side)}</p>
         <p>Renders so far {yield* StateRef.get(renders)}</p>

@@ -2,7 +2,7 @@ import { Suspense, useState, ViewTransition } from 'react';
 import './App.css';
 import { Figure } from './Figure.effect';
 import { SixSidedDie } from './SixSidedDie.effect';
-import { Clock } from './Clock.effect';
+import { Clock, ClockFallback } from './Clock.effect';
 
 const GLOBAL = new Proxy(
   { renders: Number() },
@@ -33,12 +33,12 @@ function App() {
   return (
     <div>
       <h1>Effect + React</h1>
-      <Suspense>
+      <Suspense fallback={<ClockFallback />}>
         <Clock />
       </Suspense>
       <hr />
       <ViewTransition>
-        <Suspense fallback={<div>Six Sided Die</div>}>
+        <Suspense fallback={<ViewTransition key='title'><p>Six Sided Die</p></ViewTransition>}>
           <SixSidedDie />
         </Suspense>
       </ViewTransition>

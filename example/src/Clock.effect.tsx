@@ -22,3 +22,11 @@ export const { Clock } = WithEffect(
     );
   })
 );
+
+export function ClockFallback() {
+  return (
+    <div>
+      <p>{new Date().toString()}</p>
+    </div>
+  );
+}
