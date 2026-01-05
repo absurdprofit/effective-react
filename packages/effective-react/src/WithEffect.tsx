@@ -1,13 +1,13 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
-import { use, useReducer, useRef, startTransition, type JSX, type RefObject, memo, useEffect } from 'react';
+import { use, useReducer, useRef, startTransition, type JSX, type RefObject, useEffect } from 'react';
 import { ReactContext } from './ReactContext';
 import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
-interface State {
-  promise?: Promise<JSX.Element | undefined>;
+interface State<R> {
+  promise?: Promise<R | undefined>;
   controller?: AbortController;
-  result?: JSX.Element;
-  effect: Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>;
+  result?: R;
+  effect: Effect.Effect<R, never, ReactContext | Scope.Scope>;
   scheduleUpdate: () => void;
   forceUpdate: React.ActionDispatch<[]>;
   transition: boolean;
@@ -16,9 +16,9 @@ interface State {
   finaliserId?: number;
 }
 
-function RenderFactory() {
+function RenderFactory<R>() {
   return function render(
-    state: RefObject<State>
+    state: RefObject<State<R>>
   ) {
     state.current.Refs ??= new Map();
     state.current.controller ??= new AbortController();
@@ -63,7 +63,7 @@ function RenderFactory() {
   };
 };
 
-function finalise(state: RefObject<State>) {
+function finalise(state: RefObject<State<unknown>>) {
   // unmount
   if (!state.current.Scope)
     return;
@@ -72,17 +72,17 @@ function finalise(state: RefObject<State>) {
   );
 };
 
-export function WithEffect<P extends object>(
-  lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
-): Record<string, (props: P) => JSX.Element> {
-  const render = RenderFactory();
-  function reset(state: RefObject<State>) {
+export function WithEffect<P extends object, R>(
+  lambda: (props: P) => Effect.Effect<R, never, ReactContext | Scope.Scope>
+): Record<string, (props: P) => R> {
+  const render = RenderFactory<R>();
+  function reset(state: RefObject<State<R>>) {
     state.current.promise = undefined;
     state.current.controller?.abort();
     state.current.controller = undefined;
     state.current.transition = false;
   };
-  function rerender(state: RefObject<State>) {
+  function rerender(state: RefObject<State<R>>) {
     state.current.promise ??= render(
       state
     ).then(function onResult(result) {
@@ -98,8 +98,8 @@ export function WithEffect<P extends object>(
       return result;
     });
   };
-  const store = new WeakMap<P, State>();
-  function Component(props: P) {
+  const store = new WeakMap<P, State<R>>();
+  function ComponentOrHook(props: P) {
     const [, forceUpdate] = useReducer(function tick(t) {
       return t + FORCE_UPDATE_STEP;
     }, Number());
@@ -145,10 +145,10 @@ export function WithEffect<P extends object>(
     }
   }
 
-  return new Proxy({} as Record<string, typeof Component>, {
+  return new Proxy({} as Record<string, typeof ComponentOrHook>, {
     get(_, key) {
-      return memo(
-        Object.defineProperty(Component, 'name', { value: key })
+      return (
+        Object.defineProperty(ComponentOrHook, 'name', { value: key })
       );
     },
   });
