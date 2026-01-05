@@ -9,6 +9,7 @@ interface State {
   jsx?: JSX.Element;
   effect: Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>;
   rerender: () => void;
+  forceUpdate: React.ActionDispatch<[]>;
   transition: boolean;
   Refs?: Map<unknown, Ref.Ref<unknown>>;
   Scope?: Scope.CloseableScope;
@@ -74,36 +75,48 @@ export function WithEffect<P extends object>(
   lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
 ): Record<string, (props: P) => JSX.Element | undefined> {
   const render = RenderFactory();
+  const reset = (state: RefObject<State>) => {
+    state.current.promise = undefined;
+    state.current.controller?.abort();
+    state.current.controller = undefined;
+    state.current.transition = false;
+  };
+  const rerender = (state: RefObject<State>) => {
+    state.current.promise ??= render(
+      state
+    ).then(jsx => {
+      const forceUpdate = state.current.forceUpdate;
+      if (state.current.jsx) {
+        state.current.jsx = jsx;
+        if (state.current.transition)
+          startTransition(forceUpdate);
+        else
+          forceUpdate();
+      }
+
+      return jsx;
+    });
+  };
   const store = new WeakMap<P, State>();
   function Component(props: P) {
     const [, forceUpdate] = useReducer((t) => t + FORCE_UPDATE_STEP, Number());
-
-    const rerender = () => {
-      state.current.promise ??= render(
-        state
-      ).then(jsx => {
-        if (state.current.jsx) {
-          state.current.jsx = jsx;
-          if (state.current.transition)
-            startTransition(forceUpdate);
-          else
-            forceUpdate();
-        }
-
-        return jsx;
-      });
-    };
+    
     const effect = lambda(props);
     const state = useRef(
       store.get(props)
       ?? {
-        rerender,
+        rerender: () => {
+          reset(state);
+          rerender(state);
+        },
+        forceUpdate,
         effect,
         transition: false,
       });
     const propsChanged = !store.has(props);
     store.set(props, state.current);
     state.current.effect = effect;
+    state.current.forceUpdate = forceUpdate;
 
     useEffect(() => {
       const currentState = state.current;
@@ -114,22 +127,11 @@ export function WithEffect<P extends object>(
       };
     }, []);
 
-    state.current.rerender = () => {
-      state.current.promise = undefined;
-      state.current.controller?.abort();
-      state.current.controller = undefined;
-      state.current.transition = false;
-      rerender();
-    };
-
     if (propsChanged) {
-      state.current.promise = undefined;
-      state.current.controller?.abort();
-      state.current.controller = undefined;
-      state.current.transition = false;
+      reset(state);
     }
     if (state.current.jsx) {
-      rerender();
+      rerender(state);
       return state.current.jsx;
     } else {
       state.current.promise ??= render(state);
