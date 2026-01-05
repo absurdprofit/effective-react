@@ -5,17 +5,19 @@ const useDate = new UseStateRef();
 const SECOND_IN_MS = 1000;
 export const { Clock } = WithEffect(
   Effect.fn(function* () {
-    const date = yield* useDate(Effect.sync(() => new Date().toString()));
+    const date = yield* useDate(Effect.sync(() => new Date()));
+    const currentDate = (yield* StateRef.get(date));
+    const duration = SECOND_IN_MS - (Date.now() - currentDate.getTime());
     yield* Effect.forkScoped(
       Effect.zip(
-        Effect.sleep(SECOND_IN_MS),
-        StateRef.set(date, new Date().toString())
+        Effect.sleep(duration),
+        StateRef.set(date, new Date())
       )
     );
 
     return (
       <div>
-        <p>{yield* StateRef.get(date)}</p>
+        <p>{currentDate.toString()}</p>
       </div>
     );
   })
