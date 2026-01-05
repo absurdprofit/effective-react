@@ -3,7 +3,7 @@ import { Effect } from 'effect';
 
 const useDate = new UseStateRef();
 const SECOND_IN_MS = 1000;
-export const { Clock } = WithEffect(
+const { Clock } = WithEffect(
   Effect.fn(function* () {
     const date = yield* useDate(Effect.sync(() => new Date()));
     const currentDate = (yield* StateRef.get(date));
@@ -23,10 +23,12 @@ export const { Clock } = WithEffect(
   })
 );
 
-export function ClockFallback() {
+function ClockFallback() {
   return (
     <div>
       <p>{new Date().toString()}</p>
     </div>
   );
 }
+
+export { Clock, ClockFallback };
