@@ -117,7 +117,9 @@ export function WithEffect<P extends object>(
         transition: false,
       });
     const propsChanged = !store.has(props);
-    store.set(props, state.current);
+    if (propsChanged) {
+      store.set(props, state.current);
+    }
     state.current.effect = effect;
     state.current.forceUpdate = forceUpdate;
 
