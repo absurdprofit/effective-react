@@ -116,10 +116,6 @@ export function WithEffect<P extends object>(
         effect,
         transition: false,
       });
-    const propsChanged = !store.has(props);
-    if (propsChanged) {
-      store.set(props, state.current);
-    }
     state.current.effect = effect;
     state.current.forceUpdate = forceUpdate;
 
@@ -132,7 +128,9 @@ export function WithEffect<P extends object>(
       };
     }, []);
 
+    const propsChanged = !store.has(props);
     if (propsChanged) {
+      store.set(props, state.current);
       reset(state);
     }
     if (state.current.jsx) {
