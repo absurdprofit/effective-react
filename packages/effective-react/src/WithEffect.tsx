@@ -147,7 +147,7 @@ export function WithEffect<P extends object>(
 
   return new Proxy({} as Record<string, typeof Component>, {
     get(_, key) {
-      return (
+      return memo(
         Object.defineProperty(Component, 'name', { value: key })
       );
     },
