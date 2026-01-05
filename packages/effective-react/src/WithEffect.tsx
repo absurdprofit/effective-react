@@ -6,7 +6,7 @@ import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_
 interface State {
   promise?: Promise<JSX.Element | undefined>;
   controller?: AbortController;
-  jsx?: JSX.Element;
+  result?: JSX.Element;
   effect: Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>;
   scheduleUpdate: () => void;
   forceUpdate: React.ActionDispatch<[]>;
@@ -55,7 +55,7 @@ function RenderFactory() {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
         }
-        return state.current.jsx;
+        return state.current.result;
       } else {
         return exit.value;
       }
@@ -85,17 +85,17 @@ export function WithEffect<P extends object>(
   function rerender(state: RefObject<State>) {
     state.current.promise ??= render(
       state
-    ).then(function onJSX(jsx) {
+    ).then(function onResult(result) {
       const forceUpdate = state.current.forceUpdate;
-      if (state.current.jsx) {
-        state.current.jsx = jsx;
+      if (state.current.result) {
+        state.current.result = result;
         if (state.current.transition)
           startTransition(forceUpdate);
         else
           forceUpdate();
       }
 
-      return jsx;
+      return result;
     });
   };
   const store = new WeakMap<P, State>();
@@ -133,15 +133,15 @@ export function WithEffect<P extends object>(
       store.set(props, state.current);
       reset(state);
     }
-    if (state.current.jsx) {
+    if (state.current.result) {
       rerender(state);
-      return state.current.jsx;
+      return state.current.result;
     } else {
       state.current.promise ??= render(state);
-      const jsx = use(state.current.promise);
-      state.current.jsx = jsx;
+      const result = use(state.current.promise);
+      state.current.result = result;
 
-      return jsx!;
+      return result!;
     }
   }
 
