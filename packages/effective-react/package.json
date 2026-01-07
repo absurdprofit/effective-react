@@ -17,7 +17,6 @@
     "url": "git+https://github.com/absurdprofit/effective-react.git"
   },
   "scripts": {
-    "pretest": "npx playwright install",
     "test:coverage": "vitest --coverage",
     "test": "vitest --run",
     "publish": "npx jsr publish --allow-slow-types --allow-dirty",
