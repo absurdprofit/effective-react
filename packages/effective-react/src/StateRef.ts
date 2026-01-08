@@ -24,6 +24,12 @@ export const make = <A>(
 
 export const get = SynchronizedRef.get;
 
+export const fencedGet: <A>(
+  self: SynchronizedRef.SynchronizedRef<A>
+) => Effect.Effect<A> = (self) => {
+  return SynchronizedRef.updateAndGet(self, (value) => value);
+};
+
 export const set = dual<
   <A>(value: A) => (self: SynchronizedRef.SynchronizedRef<A>) => Effect.Effect<void, never, ReactContext>,
   <A>(self: SynchronizedRef.SynchronizedRef<A>, value: A) => Effect.Effect<void, never, ReactContext>
