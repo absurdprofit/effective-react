@@ -1,7 +1,7 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
-import { use, useReducer, useRef, startTransition, type JSX, type RefObject, useEffect } from 'react';
+import { use, useReducer, useRef, startTransition, type RefObject, useEffect } from 'react';
 import { ReactContext } from './ReactContext';
-import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
+import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, IS_RENDERING_SYMBOL } from './common/constants';
 
 interface State<R> {
   promise?: Promise<R | undefined>;
@@ -10,6 +10,8 @@ interface State<R> {
   effect: Effect.Effect<R, never, ReactContext | Scope.Scope>;
   scheduleUpdate: () => void;
   forceUpdate: React.ActionDispatch<[]>;
+  isRendering: () => boolean;
+  phase: 'rendering' | 'rendered' | 'committed';
   transition: boolean;
   Refs?: Map<unknown, Ref.Ref<unknown>>;
   Scope?: Scope.CloseableScope;
@@ -36,6 +38,7 @@ function RenderFactory<R>() {
                 [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
                 [REFS_SYMBOL]: state.current.Refs,
                 [SET_TRANSITION_SYMBOL]: setTransition,
+                [IS_RENDERING_SYMBOL]: state.current.isRendering,
               }
             )
           ),
@@ -51,6 +54,7 @@ function RenderFactory<R>() {
         ),
       { signal }
     ).then(function onExit(exit) {
+      state.current.phase = 'rendered';
       if (Exit.isFailure(exit)) {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
@@ -81,6 +85,7 @@ export function WithEffect<P extends object, R>(
     state.current.controller?.abort();
     state.current.controller = undefined;
     state.current.transition = false;
+    state.current.phase = 'rendering';
   };
   function rerender(state: RefObject<State<R>>) {
     state.current.promise ??= render(
@@ -112,6 +117,10 @@ export function WithEffect<P extends object, R>(
           reset(state);
           rerender(state);
         },
+        phase: 'rendering' as const,
+        isRendering(): boolean {
+          return state.current.phase === 'rendering';
+        },
         forceUpdate,
         effect,
         transition: false,
@@ -122,6 +131,7 @@ export function WithEffect<P extends object, R>(
     useEffect(() => {
       const currentState = state.current;
       clearTimeout(state.current.finaliserId);
+      currentState.phase = 'committed' as const;
 
       return () => {
         currentState.finaliserId = setTimeout(finalise.bind(null, state));

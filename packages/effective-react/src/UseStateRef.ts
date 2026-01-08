@@ -1,11 +1,11 @@
-import { Effect, Ref } from 'effect';
+import { Effect, SynchronizedRef } from 'effect';
 import * as StateRef from './StateRef';
 import { ReactContext } from './ReactContext';
 import { REFS_SYMBOL } from './common/constants';
 
 type UseStateRef = <A, R = never>(
   initial: A | Effect.Effect<A, never, R>
-) => Effect.Effect<Ref.Ref<A>, never, R | ReactContext>;
+) => Effect.Effect<SynchronizedRef.SynchronizedRef<A>, never, R | ReactContext>;
 type UseStateRefConstructor = {
   new(): UseStateRef;
 }

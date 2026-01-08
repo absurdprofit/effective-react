@@ -21,7 +21,7 @@ export const { SixSidedDie } = WithEffect(() => {
     yield* StateRef.update(renders, (n) => ++n);
     const onClick = yield* CallbackEffect(() => (
       Effect.gen(function* () {
-        yield* StateRef.set(side, yield* random.next);
+        yield* StateRef.updateEffect(side, () => random.next);
       })
     ));
 
@@ -31,8 +31,8 @@ export const { SixSidedDie } = WithEffect(() => {
           <p>Six Sided Die</p>
         </ViewTransition>
         <button onClick={onClick}>Roll!</button>
-        <p>Side {yield* StateRef.get(side)}</p>
-        <p>Renders so far {yield* StateRef.get(renders)}</p>
+        <p>Side {yield* side.get}</p>
+        <p>Renders so far {yield* renders.get}</p>
       </div>
     );
   });
