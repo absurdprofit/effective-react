@@ -17,7 +17,6 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
-    "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "jsr": "^0.13.5",
@@ -33,5 +32,9 @@
   ],
   "engines": {
     "node": "^22.14.0"
+  },
+  "dependencies": {
+    "eslint-plugin-react-compiler": "^19.1.0-rc.2",
+    "zod-validation-error": "^4.0.2"
   }
 }
