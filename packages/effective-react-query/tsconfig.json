@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig",
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "moduleResolution": "nodenext",
+    "module": "nodenext"
+  },
+  "include": [
+    "src/**/*.tsx",
+    "src/**/*.ts",
+    "tests/**/*.tsx",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
+}

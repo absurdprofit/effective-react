@@ -1,40 +1,44 @@
 import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
-import { use, useReducer, useRef, startTransition, type JSX, type RefObject, memo } from 'react';
+import { use, useReducer, useRef, startTransition, type RefObject, useEffect } from 'react';
 import { ReactContext } from './ReactContext';
-import { ENABLE_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
+import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, IS_RENDERING_SYMBOL } from './common/constants';
 
-interface State {
-  promise?: Promise<JSX.Element | undefined>;
+interface State<R> {
+  promise?: Promise<R | undefined>;
   controller?: AbortController;
-  jsx?: JSX.Element;
-  rerender: () => void;
+  result?: R;
+  effect: Effect.Effect<R, never, ReactContext | Scope.Scope>;
+  scheduleUpdate: () => void;
+  forceUpdate: React.ActionDispatch<[]>;
+  isRendering: () => boolean;
+  phase: 'rendering' | 'rendered' | 'committed';
   transition: boolean;
   Refs?: Map<unknown, Ref.Ref<unknown>>;
   Scope?: Scope.CloseableScope;
+  finaliserId?: number;
 }
 
-const RenderFactory = <P extends object,>(
-  lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
-) => {
-  return (
-    props: P,
-    state: RefObject<State>
-  ) => {
+function RenderFactory<R>() {
+  return function render(
+    state: RefObject<State<R>>
+  ) {
     state.current.Refs ??= new Map();
     state.current.controller ??= new AbortController();
     const signal = state.current.controller.signal;
+    function setTransition(transition: boolean) {
+      state.current.transition = transition;
+    }
     return Effect.runPromiseExit(
-      lambda(props)
+      state.current.effect
         .pipe(
           Effect.provide(
             Layer.succeed(
               ReactContext,
               {
-                [SCHEDULE_UPDATE_SYMBOL]: () => state.current.rerender(),
+                [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
                 [REFS_SYMBOL]: state.current.Refs,
-                [ENABLE_TRANSITION_SYMBOL]: (transition: boolean) => {
-                  state.current.transition = transition;
-                },
+                [SET_TRANSITION_SYMBOL]: setTransition,
+                [IS_RENDERING_SYMBOL]: state.current.isRendering,
               }
             )
           ),
@@ -49,12 +53,13 @@ const RenderFactory = <P extends object,>(
           )
         ),
       { signal }
-    ).then(exit => {
+    ).then(function onExit(exit) {
+      state.current.phase = 'rendered';
       if (Exit.isFailure(exit)) {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
         }
-        return state.current.jsx;
+        return state.current.result;
       } else {
         return exit.value;
       }
@@ -62,63 +67,98 @@ const RenderFactory = <P extends object,>(
   };
 };
 
-export function WithEffect<P extends object>(
-  lambda: (props: P) => Effect.Effect<JSX.Element, never, ReactContext | Scope.Scope>
-): Record<string, (props: P) => JSX.Element | undefined> {
-  const render = RenderFactory(lambda);
-  const store = new WeakMap<P, State>();
-  function Component(props: P) {
-    const [, forceUpdate] = useReducer((t) => t + FORCE_UPDATE_STEP, Number());
-    const rerender = () => {
-      state.current.promise ??= render(
-        props,
-        state
-      ).then(jsx => {
-        if (state.current.jsx) {
-          state.current.jsx = jsx;
-          if (state.current.transition)
-            startTransition(forceUpdate);
-          else
-            forceUpdate();
-        }
+function finalise(state: RefObject<State<unknown>>) {
+  // unmount
+  if (!state.current.Scope)
+    return;
+  Effect.runPromise(
+    Scope.close(state.current.Scope, Exit.void)
+  );
+};
 
-        return jsx;
+export function WithEffect<P extends object, R>(
+  lambda: (props: P) => Effect.Effect<R, never, ReactContext | Scope.Scope>
+): Record<string, (props: P) => R> {
+  const render = RenderFactory<R>();
+  function reset(state: RefObject<State<R>>) {
+    state.current.promise = undefined;
+    state.current.controller?.abort();
+    state.current.controller = undefined;
+    state.current.transition = false;
+    state.current.phase = 'rendering';
+  };
+  function rerender(state: RefObject<State<R>>) {
+    state.current.promise ??= render(
+      state
+    ).then(function onResult(result) {
+      const forceUpdate = state.current.forceUpdate;
+      if (state.current.result) {
+        state.current.result = result;
+        if (state.current.transition)
+          startTransition(forceUpdate);
+        else
+          forceUpdate();
+      }
+
+      return result;
+    });
+  };
+  const store = new WeakMap<P, State<R>>();
+  function ComponentOrHook(props: P) {
+    const [, forceUpdate] = useReducer(function tick(t) {
+      return t + FORCE_UPDATE_STEP;
+    }, Number());
+    
+    const effect = lambda(props);
+    const state = useRef(
+      store.get(props)
+      ?? {
+        scheduleUpdate() {
+          reset(state);
+          rerender(state);
+        },
+        phase: 'rendering' as const,
+        isRendering(): boolean {
+          return state.current.phase === 'rendering';
+        },
+        forceUpdate,
+        effect,
+        transition: false,
       });
-    };
-    const state = useRef(store.get(props) ?? { rerender, transition: false });
+    state.current.effect = effect;
+    state.current.forceUpdate = forceUpdate;
+
+    useEffect(() => {
+      const currentState = state.current;
+      clearTimeout(state.current.finaliserId);
+      currentState.phase = 'committed' as const;
+
+      return () => {
+        currentState.finaliserId = setTimeout(finalise.bind(null, state));
+      };
+    }, []);
+
     const propsChanged = !store.has(props);
-    store.set(props, state.current);
-
-    state.current.rerender = () => {
-      state.current.promise = undefined;
-      state.current.controller?.abort();
-      state.current.controller = undefined;
-      state.current.transition = false;
-      rerender();
-    };
-
     if (propsChanged) {
-      state.current.promise = undefined;
-      state.current.controller?.abort();
-      state.current.controller = undefined;
-      state.current.transition = false;
+      store.set(props, state.current);
+      reset(state);
     }
-    if (state.current.jsx) {
-      rerender();
-      return state.current.jsx;
+    if (state.current.result) {
+      rerender(state);
+      return state.current.result;
     } else {
-      state.current.promise ??= render(props, state);
-      const jsx = use(state.current.promise);
-      state.current.jsx = jsx;
+      state.current.promise ??= render(state);
+      const result = use(state.current.promise);
+      state.current.result = result;
 
-      return jsx;
+      return result!;
     }
   }
 
-  return new Proxy({} as Record<string, typeof Component>, {
+  return new Proxy({} as Record<string, typeof ComponentOrHook>, {
     get(_, key) {
-      return memo(
-        Object.defineProperty(Component, 'name', { value: key })
+      return (
+        Object.defineProperty(ComponentOrHook, 'name', { value: key })
       );
     },
   });
