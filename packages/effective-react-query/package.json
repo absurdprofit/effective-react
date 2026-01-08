@@ -31,7 +31,6 @@
     "@tanstack/query-core": "^5.90.16"
   },
   "devDependencies": {
-    "vitest": "^4.0.16",
-    "@vitest/browser-playwright": "^4.0.16"
+    "vitest": "^4.0.16"
   }
 }

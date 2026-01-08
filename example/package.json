@@ -13,7 +13,7 @@
     "effect": "^3.19.8",
     "react": "experimental",
     "react-dom": "experimental",
-    "effective-react": "*"
+    "@absurdprofit/effective-react": "*"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
