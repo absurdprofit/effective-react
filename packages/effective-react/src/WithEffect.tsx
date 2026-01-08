@@ -87,7 +87,6 @@ export function WithEffect<P extends object, R>(
     state.current.promise = undefined;
     state.current.controller?.abort();
     state.current.controller = undefined;
-    state.current.transition = false;
     state.current.phase = 'rendering';
   };
   function rerender(state: RefObject<State<R>>) {
@@ -101,6 +100,8 @@ export function WithEffect<P extends object, R>(
           startTransition(forceUpdate);
         else
           forceUpdate();
+
+        state.current.transition = false;
       }
 
       return result;
