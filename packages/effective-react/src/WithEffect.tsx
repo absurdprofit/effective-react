@@ -1,17 +1,18 @@
-import { Cause, Scope, Effect, Exit, Layer, Ref } from 'effect';
+import { Cause, Scope, Effect, Exit, Layer, Ref, flow } from 'effect';
 import { use, useReducer, useRef, startTransition, type RefObject, useEffect } from 'react';
 import { ReactContext } from './ReactContext';
-import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, IS_RENDERING_SYMBOL } from './common/constants';
+import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, PHASE_SYMBOL } from './common/constants';
+import { EffectiveComponentPhase } from './common/types';
 
 interface State<R> {
   promise?: Promise<R | undefined>;
   controller?: AbortController;
   result?: R;
+  suspended: boolean;
   effect: Effect.Effect<R, never, ReactContext | Scope.Scope>;
   scheduleUpdate: () => void;
   forceUpdate: React.ActionDispatch<[]>;
-  isRendering: () => boolean;
-  phase: 'rendering' | 'rendered' | 'committed';
+  phase: EffectiveComponentPhase;
   transition: boolean;
   Refs?: Map<unknown, Ref.Ref<unknown>>;
   Scope?: Scope.CloseableScope;
@@ -22,39 +23,41 @@ function RenderFactory<R>() {
   return function render(
     state: RefObject<State<R>>
   ) {
-    state.current.Refs ??= new Map();
-    state.current.controller ??= new AbortController();
-    const signal = state.current.controller.signal;
     function setTransition(transition: boolean) {
       state.current.transition = transition;
     }
-    return Effect.runPromiseExit(
-      state.current.effect
-        .pipe(
-          Effect.provide(
-            Layer.succeed(
-              ReactContext,
-              {
-                [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
-                [REFS_SYMBOL]: state.current.Refs,
-                [SET_TRANSITION_SYMBOL]: setTransition,
-                [IS_RENDERING_SYMBOL]: state.current.isRendering,
-              }
-            )
-          ),
-          Effect.provide(
-            Layer.effect(Scope.Scope, Effect.gen(function* () {
-              if (state.current.Scope)
-                yield* Scope.close(state.current.Scope, Exit.void);
-              state.current.Scope = yield* Scope.make();
+    state.current.Refs ??= new Map();
+    state.current.controller ??= new AbortController();
+    const signal = state.current.controller.signal;
+    const compose = flow(
+      Effect.provide(
+        Layer.succeed(
+          ReactContext,
+          {
+            [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
+            [REFS_SYMBOL]: state.current.Refs,
+            [SET_TRANSITION_SYMBOL]: setTransition,
+            get [PHASE_SYMBOL]() {
+              return state.current.phase;
+            },
+          }
+        )
+      ),
+      Effect.provide(
+        Layer.effect(Scope.Scope, Effect.gen(function* () {
+          if (state.current.Scope)
+            yield* Scope.close(state.current.Scope, Exit.void);
+          state.current.Scope = yield* Scope.make();
 
-              return state.current.Scope;
-            }))
-          )
-        ),
+          return state.current.Scope;
+        }))
+      )
+    );
+    return Effect.runPromiseExit(
+      compose(state.current.effect),
       { signal }
     ).then(function onExit(exit) {
-      state.current.phase = 'rendered';
+      state.current.phase = 'committing';
       if (Exit.isFailure(exit)) {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
@@ -118,12 +121,10 @@ export function WithEffect<P extends object, R>(
           rerender(state);
         },
         phase: 'rendering' as const,
-        isRendering(): boolean {
-          return state.current.phase === 'rendering';
-        },
         forceUpdate,
         effect,
         transition: false,
+        suspended: true,
       });
     state.current.effect = effect;
     state.current.forceUpdate = forceUpdate;
@@ -149,6 +150,7 @@ export function WithEffect<P extends object, R>(
     } else {
       state.current.promise ??= render(state);
       const result = use(state.current.promise);
+      state.current.suspended = false;
       state.current.result = result;
 
       return result!;
