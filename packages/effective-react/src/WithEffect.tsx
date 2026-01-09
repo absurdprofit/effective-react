@@ -3,13 +3,14 @@ import { use, useReducer, useRef, startTransition, type RefObject, useEffect } f
 import { ReactContext } from './ReactContext';
 import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, PHASE_SYMBOL } from './common/constants';
 import { EffectiveComponentPhase } from './common/types';
+import { Transition } from './Transition';
 
 interface State<R> {
   promise?: Promise<R | undefined>;
   controller?: AbortController;
   result?: R;
   suspended: boolean;
-  effect: Effect.Effect<R, never, ReactContext | Scope.Scope>;
+  effect: Effect.Effect<R, never, ReactContext | Transition | Scope.Scope>;
   scheduleUpdate: () => void;
   forceUpdate: React.ActionDispatch<[]>;
   phase: EffectiveComponentPhase;
@@ -36,10 +37,17 @@ function RenderFactory<R>() {
           {
             [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
             [REFS_SYMBOL]: state.current.Refs,
-            [SET_TRANSITION_SYMBOL]: setTransition,
             get [PHASE_SYMBOL]() {
               return state.current.phase;
             },
+          }
+        )
+      ),
+      Effect.provide(
+        Layer.succeed(
+          Transition,
+          {
+            [SET_TRANSITION_SYMBOL]: setTransition,
           }
         )
       ),
@@ -79,17 +87,17 @@ function finalise(state: RefObject<State<unknown>>) {
   );
 };
 
-export function WithEffect<P extends object, R>(
-  lambda: (props: P) => Effect.Effect<R, never, ReactContext | Scope.Scope>
-): Record<string, (props: P) => R> {
-  const render = RenderFactory<R>();
-  function reset(state: RefObject<State<R>>) {
+export function WithEffect<P extends object, A>(
+  lambda: (props: P) => Effect.Effect<A, never, ReactContext | Transition | Scope.Scope>
+): Record<string, (props: P) => A> {
+  const render = RenderFactory<A>();
+  function reset(state: RefObject<State<A>>) {
     state.current.promise = undefined;
     state.current.controller?.abort();
     state.current.controller = undefined;
     state.current.phase = 'rendering';
   };
-  function rerender(state: RefObject<State<R>>) {
+  function rerender(state: RefObject<State<A>>) {
     state.current.promise ??= render(
       state
     ).then(function onResult(result) {
@@ -107,7 +115,7 @@ export function WithEffect<P extends object, R>(
       return result;
     });
   };
-  const store = new WeakMap<P, State<R>>();
+  const store = new WeakMap<P, State<A>>();
   function ComponentOrHook(props: P) {
     const [, forceUpdate] = useReducer(function tick(t) {
       return t + FORCE_UPDATE_STEP;
