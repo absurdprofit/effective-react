@@ -5,6 +5,11 @@ import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_
 import { EffectiveComponentPhase } from './common/types';
 import { Transition } from './Transition';
 
+type Environment =
+  ReactContext
+  | Transition
+  | Scope.Scope
+
 interface State<R> {
   promise?: Promise<R | undefined>;
   controller?: AbortController;
@@ -87,8 +92,8 @@ function finalise(state: RefObject<State<unknown>>) {
   );
 };
 
-export function WithEffect<P extends object, A>(
-  lambda: (props: P) => Effect.Effect<A, never, ReactContext | Transition | Scope.Scope>
+export function WithEffect<P extends object, A, R extends Environment>(
+  lambda: (props: P) => Effect.Effect<A, never, R>
 ): Record<string, (props: P) => A> {
   const render = RenderFactory<A>();
   function reset(state: RefObject<State<A>>) {
