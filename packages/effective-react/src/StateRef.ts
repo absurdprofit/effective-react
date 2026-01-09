@@ -1,7 +1,11 @@
 import { Effect, SynchronizedRef } from 'effect';
 import { dual } from 'effect/Function';
 import { ReactContext } from './ReactContext';
-import { IS_RENDERING_SYMBOL, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
+import { PHASE_SYMBOL, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
+
+function canUpdate(context: ReactContext['Type']) {
+  return context[PHASE_SYMBOL] !== 'rendering';
+}
 
 const ARITY = 2;
 
@@ -40,7 +44,7 @@ export const set = dual<
       yield* SynchronizedRef.set(self, value);
 
       const context = yield* ReactContext;
-      if (!context[IS_RENDERING_SYMBOL]()) {
+      if (canUpdate(context)) {
         const ScheduleUpdate = context[SCHEDULE_UPDATE_SYMBOL];
         yield* Effect.sync(ScheduleUpdate);
       }
@@ -58,7 +62,7 @@ export const update = dual<
       yield* SynchronizedRef.update(self, f);
 
       const context = yield* ReactContext;
-      if (!context[IS_RENDERING_SYMBOL]()) {
+      if (canUpdate(context)) {
         const ScheduleUpdate = context[SCHEDULE_UPDATE_SYMBOL];
         yield* Effect.sync(ScheduleUpdate);
       }
@@ -79,7 +83,7 @@ export const updateEffect = dual<
       yield* SynchronizedRef.updateEffect(self, f);
 
       const context = yield* ReactContext;
-      if (!context[IS_RENDERING_SYMBOL]()) {
+      if (canUpdate(context)) {
         const ScheduleUpdate = context[SCHEDULE_UPDATE_SYMBOL];
         yield* Effect.sync(ScheduleUpdate);
       }

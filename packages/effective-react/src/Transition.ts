@@ -1,15 +1,15 @@
-import { Effect } from 'effect';
-import { ReactContext } from './ReactContext';
+import { Context, Effect } from 'effect';
 import { SET_TRANSITION_SYMBOL } from './common/constants';
 
-export const EnableTransition: Effect.Effect<void, never, ReactContext> =
-  Effect.gen(function* () {
-    const context = yield* ReactContext;
-    yield* Effect.sync(() => context[SET_TRANSITION_SYMBOL](true));
-  });
+export class Transition extends Context.Tag('effective-react/Transition')<
+    Transition,
+    {
+      [SET_TRANSITION_SYMBOL](transition: boolean): void;
+    }
+  >() {};
 
-export const DisableTransition: Effect.Effect<void, never, ReactContext> =
+export const EnableTransition: Effect.Effect<void, never, Transition> =
   Effect.gen(function* () {
-    const context = yield* ReactContext;
-    yield* Effect.sync(() => context[SET_TRANSITION_SYMBOL](false));
+    const transition = yield* Transition;
+    yield* Effect.sync(() => transition[SET_TRANSITION_SYMBOL](true));
   });
