@@ -58,9 +58,7 @@ function RenderFactory<R>() {
       ),
       Effect.provide(
         Layer.effect(Scope.Scope, Effect.gen(function* () {
-          if (state.current.Scope)
-            yield* Scope.close(state.current.Scope, Exit.void);
-          state.current.Scope = yield* Scope.make();
+          state.current.Scope ??= yield* Scope.make();
 
           return state.current.Scope;
         }))
