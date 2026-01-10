@@ -1,5 +1,6 @@
 export { CallbackEffect } from './CallbackEffect';
 export * as StateRef from './StateRef';
+export { useDeferredCommit } from './useDeferredCommit';
 export { UseResource } from './UseResource';
 export { UseStateRef } from './UseStateRef';
 export { UseRefObject } from './UseRefObject';

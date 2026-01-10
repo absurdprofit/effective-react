@@ -1,5 +1,5 @@
-import { Context, Effect } from 'effect';
-import { UseRefObject, UseStateRef, StateRef, CallbackEffect, WithEffect } from '@absurdprofit/effective-react';
+import { Context, Deferred, Effect } from 'effect';
+import { UseRefObject, UseStateRef, StateRef, CallbackEffect, WithEffect, useDeferredCommit } from '@absurdprofit/effective-react';
 import { ViewTransition } from 'react';
 
 class Random extends Context.Tag('MyRandomService')<
@@ -14,6 +14,7 @@ const useRef = new UseRefObject();
 const useSide = new UseStateRef();
 export const { SixSidedDie } = WithEffect(() => {
   const effect = Effect.gen(function* () {
+    const commit = yield* useDeferredCommit();
     const random = yield* Random;
     const ref = yield* useRef<HTMLDivElement>();
     const side = yield* useSide(random.next);
@@ -24,6 +25,13 @@ export const { SixSidedDie } = WithEffect(() => {
         yield* StateRef.updateEffect(side, () => random.next);
       })
     ));
+    yield* Effect.forkScoped(
+      Effect.gen(function* () {
+        console.log('before', ref);
+        yield* Deferred.await(commit);
+        console.log('after', ref);
+      })
+    );
 
     return (
       <div ref={ref}>

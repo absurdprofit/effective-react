@@ -4,7 +4,7 @@ import { ReactContext } from './ReactContext';
 import { PHASE_SYMBOL, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL } from './common/constants';
 
 function canUpdate(context: ReactContext['Type']) {
-  return context[PHASE_SYMBOL] !== 'rendering';
+  return context[PHASE_SYMBOL].current !== 'rendering';
 }
 
 const ARITY = 2;

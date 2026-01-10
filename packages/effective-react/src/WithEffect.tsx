@@ -2,8 +2,8 @@ import { Cause, Scope, Effect, Exit, Layer, Ref, flow } from 'effect';
 import { use, useReducer, useRef, startTransition, type RefObject, useEffect } from 'react';
 import { ReactContext } from './ReactContext';
 import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, PHASE_SYMBOL } from './common/constants';
-import { EffectiveComponentPhase } from './common/types';
 import { Transition } from './Transition';
+import { CommittedEvent, CommittingEvent, EffectiveComponentPhase, RenderingEvent } from './EffectiveComponentPhase';
 
 type Environment =
   ReactContext
@@ -68,7 +68,7 @@ function RenderFactory<R>() {
       compose(state.current.effect),
       { signal }
     ).then(function onExit(exit) {
-      state.current.phase = 'committing';
+      state.current.phase.dispatchEvent(new CommittingEvent());
       if (Exit.isFailure(exit)) {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
@@ -98,7 +98,7 @@ export function WithEffect<P extends object, A, R extends Environment>(
     state.current.promise = undefined;
     state.current.controller?.abort();
     state.current.controller = undefined;
-    state.current.phase = 'rendering';
+    state.current.phase.dispatchEvent(new RenderingEvent());
   };
   function rerender(state: RefObject<State<A>>) {
     state.current.promise ??= render(
@@ -132,7 +132,7 @@ export function WithEffect<P extends object, A, R extends Environment>(
           reset(state);
           rerender(state);
         },
-        phase: 'rendering' as const,
+        phase: new EffectiveComponentPhase(),
         forceUpdate,
         effect,
         transition: false,
@@ -144,7 +144,7 @@ export function WithEffect<P extends object, A, R extends Environment>(
     useEffect(() => {
       const currentState = state.current;
       clearTimeout(state.current.finaliserId);
-      currentState.phase = 'committed' as const;
+      currentState.phase.dispatchEvent(new CommittedEvent());
 
       return () => {
         currentState.finaliserId = setTimeout(finalise.bind(null, state));
