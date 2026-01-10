@@ -1,8 +1,8 @@
 import { CallbackEffect, StateRef, UseStateRef, WithEffect } from '@absurdprofit/effective-react';
 import { Data, Effect } from 'effect';
 import { faker } from '@faker-js/faker';
-import { ViewTransition } from 'react';
 import { Result } from './Result';
+import { List, type RowComponentProps } from 'react-window';
 import './Persons.css';
 
 class Person extends Data.Class<{
@@ -37,9 +37,17 @@ const filterPersonsByName =
         );
       });
 
+function Row({ index, style, persons, query }: RowComponentProps<{ persons: readonly Person[], query: string }>) {
+  return (
+    <div style={style}>
+      <Result person={persons[index]} query={query} />
+    </div>
+  );
+}
+
 const usePersonsRef = new UseStateRef();
 const useQueryRef = new UseStateRef();
-export const { Persons } = WithEffect(Effect.fn(function* ({ length }: { length: number }) {
+const { Persons } = WithEffect(Effect.fn(function* ({ length }: { length: number }) {
   const persons = yield* usePersonsRef(generatePersons(length));
   const query = yield* useQueryRef('');
 
@@ -61,15 +69,14 @@ export const { Persons } = WithEffect(Effect.fn(function* ({ length }: { length:
         </span>
         <input value={current} onChange={onChange} />
       </search>
-      <ul>
-        {
-          filtered.map(person => (
-            <ViewTransition key={person.id}>
-              <Result person={person} query={current} />
-            </ViewTransition>
-          ))
-        }
-      </ul>
+      <List
+        rowComponent={Row}  
+        rowCount={filtered.length}
+        rowHeight={25}
+        rowProps={{ persons: filtered, query: current }}
+      />
     </div>
   );
 }));
+
+export { Persons };

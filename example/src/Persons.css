@@ -1,5 +1,7 @@
 .persons {
-  width: 100vw;
-  height: 80vh;
-  overflow: auto;
+  [role='list'] {
+    width: 100vw;
+    height: 70vh;
+    overflow: auto;
+  }
 }
