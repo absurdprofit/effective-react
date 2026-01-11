@@ -1,36 +1,15 @@
-import { Suspense, useState, ViewTransition } from 'react';
-import './App.css';
-import { Figure } from './Figure.effect';
-import { SixSidedDie } from './SixSidedDie.effect';
-import { Clock, ClockFallback } from './Clock.effect';
+import { Suspense } from 'react';
+// import { Persons } from './Persons';
 import { Persons } from './Persons.effect';
+import './App.css';
 
-const GLOBAL = new Proxy(
-  { renders: Number() },
-  {
-    get(target, prop, receiver) {
-      if (prop === 'renders') {
-        target.renders++;
-        return target.renders;
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-  }
-);
 
-const fallbackStyle = {
-  width: '595px',
-  height: '516px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
+const length = 1000;
 function App() {
   return (
     <div>
-      <Suspense fallback={<ClockFallback />}>
-        <Persons length={Number('1000')} />        
+      <Suspense>
+        <Persons length={length} />        
       </Suspense>
     </div>
   );

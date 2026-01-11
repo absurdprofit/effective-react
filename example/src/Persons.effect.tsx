@@ -27,15 +27,22 @@ const generatePersons = (length: number) =>
     })
   );
 
-const filterPersonsByName =
-  (query: string) =>
-    (persons: ReadonlyArray<Person>): Effect.Effect<ReadonlyArray<Person>> =>
+
+const filterPersonsByName = Effect.runSync(
+  Effect.cachedFunction(
+    ({ query, persons }: {query: string, persons: Person[]}) =>
       Effect.sync(() => {
         const q = query.toLowerCase();
         return persons.filter((p) =>
           p.fullName.toLowerCase().includes(q)
         );
-      });
+      }),
+    (props, next) => {
+      return (props.persons === next.persons)
+      && props.query === next.query;
+    }
+  )
+);
 
 function Row({ index, style, persons, query }: RowComponentProps<{ persons: readonly Person[], query: string }>) {
   return (
@@ -58,7 +65,10 @@ const { Persons } = WithEffect(Effect.fn(function* ({ length }: { length: number
   );
 
   const current = yield* query.get;
-  const filtered = yield* filterPersonsByName(current)(yield* persons.get);
+  const filtered = yield* filterPersonsByName({
+    query: current,
+    persons: yield* persons.get,
+  });
 
   return (
     <div className='persons'>
