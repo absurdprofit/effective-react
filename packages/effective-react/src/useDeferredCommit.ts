@@ -1,25 +1,34 @@
 import { Deferred, Effect, Exit, Runtime } from 'effect';
-import { ReactContext } from './ReactContext';
-import { PHASE_SYMBOL } from './common/constants';
+import React from 'react';
+import { promiseWithResolvers } from './common/utilts';
 
-export const useDeferredCommit = Effect.fn(function* () {
-  const deferred = yield* Deferred.make<void>();
-  const context = yield* ReactContext;
-  const runtime = yield* Effect.runtime();
-  yield* Effect.promise(async () => {
-    if (context[PHASE_SYMBOL].current === 'committed')
-      await Runtime.runPromise(
-        runtime,
-        Deferred.done(deferred, Exit.void)
-      );
-    else
-      context[PHASE_SYMBOL].addEventListener('committed', async () => {
-        await Runtime.runPromise(
-          runtime,
-          Deferred.done(deferred, Exit.void)
-        );
-      });
+export const useDeferredCommit = () => {
+  const callback = React.useRef<() => Effect.Effect<Deferred.Deferred<void, never>>>(null!);
+  const promise = React.useRef(promiseWithResolvers<void>());
+
+  React.useEffect(() => {
+    promise.current.resolve();
   });
 
-  return deferred;
-});
+  callback.current = Effect.fn(function* () {
+    const deferred = yield* Deferred.make<void>();
+    const runtime = yield* Effect.runtime();
+    yield* Effect.sync(() => {
+      Runtime.runPromise(
+        runtime,
+        Effect.gen(function* () {
+          yield* Effect.promise(() => promise.current.promise);
+          yield* Deferred.done(deferred, Exit.void);
+        })
+      );
+    });
+
+    return deferred;
+  });
+
+  return {
+    make: React.useCallback(() => {
+      return callback.current();
+    }, []),
+  };
+};
