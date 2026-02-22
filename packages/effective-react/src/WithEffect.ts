@@ -43,24 +43,20 @@ function RenderFactory<R>() {
       )
     );
 
-    return ASYNC_CONTEXT.run(
-      state.current,
-      async () => {
-        const exit = await Effect.runPromiseExit(
-          compose(state.current.effect),
-          { signal }
-        );
-        state.current.phase = 'committing';
-        if (Exit.isFailure(exit)) {
-          if (!Cause.isInterrupted(exit.cause)) {
-            throw exit.cause;
-          }
-          return state.current.result;
-        } else {
-          return exit.value;
+    return Effect.runPromiseExit(
+      compose(state.current.effect),
+      { signal }
+    ).then(function onExit(exit) {
+      state.current.phase = 'committing';
+      if (Exit.isFailure(exit)) {
+        if (!Cause.isInterrupted(exit.cause)) {
+          throw exit.cause;
         }
+        return state.current.result;
+      } else {
+        return exit.value;
       }
-    );
+    });
   };
 };
 
