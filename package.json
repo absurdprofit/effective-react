@@ -34,6 +34,7 @@
     "node": "^22.14.0"
   },
   "dependencies": {
+    "@webfill/async-context": "^1.0.0",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "zod-validation-error": "^4.0.2"
   }
