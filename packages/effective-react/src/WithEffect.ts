@@ -1,12 +1,12 @@
-import { Cause, Scope, Effect, Exit, Layer, Ref, flow } from 'effect';
+import { Cause, Scope, Effect, Exit, Layer, flow, Ref } from 'effect';
 import { use, useReducer, useRef, startTransition, type RefObject, useEffect } from 'react';
-import { ReactContext } from './ReactContext';
-import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, PHASE_SYMBOL } from './common/constants';
+import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP } from './common/constants';
 import { Transition } from './Transition';
 import { ASYNC_CONTEXT, State } from './AsyncContext';
+import { createRenderContext, RenderContext } from './RenderContext';
 
 type Environment =
-  ReactContext
+  RenderContext
   | Transition
   | Scope.Scope
 
@@ -17,20 +17,13 @@ function RenderFactory<R>() {
     function setTransition(transition: boolean) {
       state.current.transition = transition;
     }
-    state.current.Refs ??= new Map();
     state.current.controller ??= new AbortController();
     const signal = state.current.controller.signal;
     const compose = flow(
       Effect.provide(
         Layer.succeed(
-          ReactContext,
-          {
-            [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
-            [REFS_SYMBOL]: state.current.Refs,
-            get [PHASE_SYMBOL]() {
-              return state.current.phase;
-            },
-          }
+          RenderContext,
+          createRenderContext(state)
         )
       ),
       Effect.provide(
@@ -121,6 +114,7 @@ export function WithEffect<P extends object, A, R extends Environment>(
           reset(state);
           rerender(state);
         },
+        Refs: new Map<unknown, Ref.Ref<unknown>>(),
         phase: 'rendering' as const,
         forceUpdate,
         effect: null!,

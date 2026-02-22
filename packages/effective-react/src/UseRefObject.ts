@@ -1,10 +1,10 @@
 import { Effect } from 'effect';
 import * as StateRef from './StateRef';
-import type { ReactContext } from './ReactContext';
+import type { RenderContext } from './RenderContext';
 import React, { createRef } from 'react';
 
 type UseRefObject = <A>() =>
-    Effect.Effect<React.RefObject<A | null>, never, ReactContext>;
+    Effect.Effect<React.RefObject<A | null>, never, RenderContext>;
 type UseRefObjectConstructor = {
   new(): UseRefObject;
 }

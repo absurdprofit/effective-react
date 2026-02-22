@@ -1,10 +1,10 @@
 import { Effect } from 'effect';
 import * as StateRef from './StateRef';
-import type { ReactContext } from './ReactContext';
+import type { RenderContext } from './RenderContext';
 
 type UseDeferredValue = <A>(
   value: A
-) => Effect.Effect<A, never, ReactContext>;
+) => Effect.Effect<A, never, RenderContext>;
 type UseDeferredValueConstructor = {
   new(): UseDeferredValue;
 }
