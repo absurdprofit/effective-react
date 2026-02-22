@@ -1,1 +1,0 @@
-export type EffectiveComponentPhase = 'rendering' | 'committing' | 'committed';

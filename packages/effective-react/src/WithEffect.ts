@@ -47,7 +47,7 @@ function RenderFactory<R>() {
       compose(state.current.effect),
       { signal }
     ).then(function onExit(exit) {
-      state.current.phase = 'committing';
+      state.current.rendering = false;
       if (Exit.isFailure(exit)) {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
@@ -77,7 +77,7 @@ export function WithEffect<P extends object, A, R extends Environment>(
     state.current.promise = undefined;
     state.current.controller?.abort();
     state.current.controller = undefined;
-    state.current.phase = 'rendering';
+    state.current.rendering = true;
   };
   function rerender(state: RefObject<State<A>>) {
     state.current.promise ??= render(
@@ -111,7 +111,7 @@ export function WithEffect<P extends object, A, R extends Environment>(
           rerender(state);
         },
         Refs: new Map<unknown, Ref.Ref<unknown>>(),
-        phase: 'rendering' as const,
+        rendering: true,
         forceUpdate,
         effect: null!,
         transition: false,
@@ -127,7 +127,6 @@ export function WithEffect<P extends object, A, R extends Environment>(
     useEffect(() => {
       const currentState = state.current;
       clearTimeout(state.current.finaliserId);
-      currentState.phase = 'committed' as const;
 
       return () => {
         currentState.finaliserId = setTimeout(finalise.bind(null, state));

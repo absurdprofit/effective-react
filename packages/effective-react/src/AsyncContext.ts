@@ -1,5 +1,4 @@
 import { Scope, Effect, Ref } from 'effect';
-import { EffectiveComponentPhase } from './common/types';
 import { Transition } from './Transition';
 import AsyncContext from '@webfill/async-context';
 import { RenderContext } from './RenderContext';
@@ -12,7 +11,7 @@ export interface State<R> {
   effect: Effect.Effect<R, never, RenderContext | Transition | Scope.Scope>;
   scheduleUpdate: () => void;
   forceUpdate: React.ActionDispatch<[]>;
-  phase: EffectiveComponentPhase;
+  rendering: boolean;
   transition: boolean;
   Refs: Map<unknown, Ref.Ref<unknown>>;
   Scope?: Scope.CloseableScope;
