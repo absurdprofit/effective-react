@@ -7,3 +7,4 @@ export { UseDeferredValue } from './UseDeferredValue';
 export { startTransitionEffect } from './startTransitionEffect';
 export { WithEffect } from './WithEffect';
 export * from './Transition';
+export * from './useDeferredCommit';

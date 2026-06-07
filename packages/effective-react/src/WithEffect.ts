@@ -1,29 +1,14 @@
-import { Cause, Scope, Effect, Exit, Layer, Ref, flow } from 'effect';
+import { Cause, Scope, Effect, Exit, Layer, flow, Ref } from 'effect';
 import { use, useReducer, useRef, startTransition, type RefObject, useEffect } from 'react';
-import { ReactContext } from './ReactContext';
-import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP, REFS_SYMBOL, SCHEDULE_UPDATE_SYMBOL, PHASE_SYMBOL } from './common/constants';
-import { EffectiveComponentPhase } from './common/types';
+import { SET_TRANSITION_SYMBOL, FORCE_UPDATE_STEP } from './common/constants';
 import { Transition } from './Transition';
+import { ASYNC_CONTEXT, State } from './AsyncContext';
+import { createRenderContext, RenderContext } from './RenderContext';
 
 type Environment =
-  ReactContext
+  RenderContext
   | Transition
   | Scope.Scope
-
-interface State<R> {
-  promise?: Promise<R | undefined>;
-  controller?: AbortController;
-  result?: R;
-  suspended: boolean;
-  effect: Effect.Effect<R, never, ReactContext | Transition | Scope.Scope>;
-  scheduleUpdate: () => void;
-  forceUpdate: React.ActionDispatch<[]>;
-  phase: EffectiveComponentPhase;
-  transition: boolean;
-  Refs?: Map<unknown, Ref.Ref<unknown>>;
-  Scope?: Scope.CloseableScope;
-  finaliserId?: number;
-}
 
 function RenderFactory<R>() {
   return function render(
@@ -32,20 +17,13 @@ function RenderFactory<R>() {
     function setTransition(transition: boolean) {
       state.current.transition = transition;
     }
-    state.current.Refs ??= new Map();
     state.current.controller ??= new AbortController();
     const signal = state.current.controller.signal;
     const compose = flow(
       Effect.provide(
         Layer.succeed(
-          ReactContext,
-          {
-            [SCHEDULE_UPDATE_SYMBOL]: state.current.scheduleUpdate,
-            [REFS_SYMBOL]: state.current.Refs,
-            get [PHASE_SYMBOL]() {
-              return state.current.phase;
-            },
-          }
+          RenderContext,
+          createRenderContext(state)
         )
       ),
       Effect.provide(
@@ -64,11 +42,12 @@ function RenderFactory<R>() {
         }))
       )
     );
+
     return Effect.runPromiseExit(
       compose(state.current.effect),
       { signal }
     ).then(function onExit(exit) {
-      state.current.phase = 'committing';
+      state.current.rendering = false;
       if (Exit.isFailure(exit)) {
         if (!Cause.isInterrupted(exit.cause)) {
           throw exit.cause;
@@ -98,7 +77,7 @@ export function WithEffect<P extends object, A, R extends Environment>(
     state.current.promise = undefined;
     state.current.controller?.abort();
     state.current.controller = undefined;
-    state.current.phase = 'rendering';
+    state.current.rendering = true;
   };
   function rerender(state: RefObject<State<A>>) {
     state.current.promise ??= render(
@@ -124,7 +103,6 @@ export function WithEffect<P extends object, A, R extends Environment>(
       return t + FORCE_UPDATE_STEP;
     }, Number());
     
-    const effect = lambda(props);
     const state = useRef(
       store.get(props)
       ?? {
@@ -132,19 +110,23 @@ export function WithEffect<P extends object, A, R extends Environment>(
           reset(state);
           rerender(state);
         },
-        phase: 'rendering' as const,
+        Refs: new Map<unknown, Ref.Ref<unknown>>(),
+        rendering: true,
         forceUpdate,
-        effect,
+        effect: null!,
         transition: false,
         suspended: true,
       });
+    const effect = ASYNC_CONTEXT.run(
+      state.current,
+      () => lambda(props)
+    );
     state.current.effect = effect;
     state.current.forceUpdate = forceUpdate;
 
     useEffect(() => {
       const currentState = state.current;
       clearTimeout(state.current.finaliserId);
-      currentState.phase = 'committed' as const;
 
       return () => {
         currentState.finaliserId = setTimeout(finalise.bind(null, state));

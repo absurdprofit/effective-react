@@ -1,11 +1,11 @@
 import { Effect, SynchronizedRef } from 'effect';
 import * as StateRef from './StateRef';
-import { ReactContext } from './ReactContext';
+import { RenderContext } from './RenderContext';
 import { REFS_SYMBOL } from './common/constants';
 
 type UseStateRef = <A, R = never>(
   initial: A | Effect.Effect<A, never, R>
-) => Effect.Effect<SynchronizedRef.SynchronizedRef<A>, never, R | ReactContext>;
+) => Effect.Effect<SynchronizedRef.SynchronizedRef<A>, never, R | RenderContext>;
 type UseStateRefConstructor = {
   new(): UseStateRef;
 }
@@ -15,7 +15,7 @@ export const UseStateRef = function() {
 
   return <A, R = never>(initial: A | Effect.Effect<A, never, R>) => (
     Effect.gen(function* () {
-      const context = yield* ReactContext;
+      const context = yield* RenderContext;
       const registry = context[REFS_SYMBOL];
       if (yield* Effect.sync(() => registry.has(key))) {
         // initial is wrong here but with the above check we're certain it exists
